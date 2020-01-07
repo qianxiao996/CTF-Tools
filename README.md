@@ -1,6 +1,6 @@
 # CTF-Tools
 
-![1](C:\Users\19190\Desktop\CTF-Tools\1.jpg)
+![1](https://github.com/qianxiao996/CTF-Tools/blob/master/1.jpg)
 
 一款CTF编码、解码、加密、解密工具。
 
