@@ -41,6 +41,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.actionBase64_encode.triggered.connect(lambda: self.encode(self.Ui.actionBase64_encode.text()))
         self.Ui.actionStr_Hex_encode.triggered.connect(lambda: self.encode(self.Ui.actionStr_Hex_encode.text()))
         self.Ui.actionShellcode_encode.triggered.connect(lambda: self.encode(self.Ui.actionShellcode_encode.text()))
+        self.Ui.actionQwerty_encode.triggered.connect(lambda: self.encode(self.Ui.actionQwerty_encode.text()))
         #decode
         self.Ui.actionURL_UTF8_decode.triggered.connect(lambda:self.decode(self.Ui.actionURL_UTF8_decode.text()))
         self.Ui.actionURL_GB2312_decode.triggered.connect(lambda: self.decode(self.Ui.actionURL_GB2312_decode.text()))
@@ -53,6 +54,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.actionBase64_decode.triggered.connect(lambda: self.decode(self.Ui.actionBase64_decode.text()))
         self.Ui.actionHex_Str_decode.triggered.connect(lambda: self.decode(self.Ui.actionHex_Str_decode.text()))
         self.Ui.actionShellcode_decode.triggered.connect(lambda: self.decode(self.Ui.actionShellcode_decode.text()))
+        self.Ui.actionQwerty_decode.triggered.connect(lambda: self.decode(self.Ui.actionQwerty_decode.text()))
         #encrypt
         self.Ui.actionRot13_encrypt.triggered.connect(lambda:self.encrypt(self.Ui.actionRot13_encrypt.text()))
         self.Ui.action_kaisa_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_kaisa_encrypt.text()))
@@ -62,6 +64,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.action_yunying_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_yunying_encrypt.text()))
         self.Ui.action_dangpu_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_dangpu_encrypt.text()))
         self.Ui.action_weinijiya_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_weinijiya_encrypt.text()))
+        self.Ui.action_Atbash_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_Atbash_encrypt.text()))
 
         #decrypt
         self.Ui.actionRot13_decrypt.triggered.connect(lambda:self.decrypt(self.Ui.actionRot13_decrypt.text()))
@@ -73,6 +76,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.action_yunxing_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_yunxing_decrypt.text()))
         self.Ui.action_dangpu_decry.triggered.connect(lambda: self.decrypt(self.Ui.action_dangpu_decry.text()))
         self.Ui.action_weinijiya_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_weinijiya_decrypt.text()))
+        self.Ui.action_Atbash_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_Atbash_decrypt.text()))
 
         #进制转换
         self.Ui.action2_8.triggered.connect(lambda:self.Binary(self.Ui.action2_8.text()))
@@ -168,6 +172,15 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     single = str(hex(ord(str(i))))
                     result = result + single
                 result_text=(str(result)).replace('0x', '\\x')
+            if encode_type=='Qwerty':
+                str1 = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
+                str2 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                result_text = ""
+                for s in text:
+                    if s !=' ':
+                        result_text = result_text + str1[str2.index(s)]
+                    else:
+                        result_text = result_text+' '
             self.Ui.Result_text.setText(str(result_text))
         except Exception as e :
             pass
@@ -224,8 +237,27 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     single = str(bytes.fromhex(i), encoding="utf-8")
                     result = result + single
                 result_text =str(result)
+            if decode_type=='Qwerty':
+                letter = {
+                    'q': 'a', 'w': 'b', 'e': 'c', 'r': 'd', 't': 'e', 'y': 'f', 'u': 'g',
+                    'i': 'h', 'o': 'i', 'p': 'j', 'a': 'k', 's': 'l', 'd': 'm', 'f': 'n',
+                    'g': 'o', 'h': 'p', 'j': 'q', 'k': 'r', 'l': 's', 'z': 't',
+                    'x': 'u', 'c': 'v', 'v': 'w', 'b': 'x', 'n': 'y', 'm': 'z',
+
+                    'Q': 'A', 'W': 'B', 'E': 'C', 'R': 'D', 'T': 'E', 'Y': 'F', 'U': 'G',
+                    'I': 'H', 'O': 'I', 'P': 'J', 'A': 'K', 'S': 'L', 'D': 'M', 'F': 'N',
+                    'G': 'O', 'H': 'P', 'J': 'Q', 'K': 'R', 'L': 'S', 'Z': 'T',
+                    'X': 'U', 'C': 'V', 'V': 'W', 'B': 'X', 'N': 'Y', 'M': 'Z',
+                }
+                result_text = ''
+                for i in range(0, len(text)):
+                    if text[i] != ' ':
+                        result_text = result_text + letter.get(text[i])
+                    else:
+                        result_text = result_text + ' '
             self.Ui.Result_text.setText(str(result_text))
         except Exception as e :
+            # print(e)
             pass
     #encrypt
     def encrypt(self,encrypt_type):
@@ -338,10 +370,19 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.WChild.setupUi(self.dialog)
                 self.dialog.show()
                 self.WChild.keyenter.clicked.connect(self.VigenereEncrypto)
+            if encrypt_type=='埃特巴什码':
+                str1 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                str2 = "zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA"
+                result_text = ""
+                for s in text:
+                    if s != ' ':
+                        result_text = result_text + str2[str1.index(s)]
+                    else:
+                        result_text = result_text + ' '
             self.Ui.Result_text.setText(result_text)
         except Exception as e :
             # QMessageBox.critical(self,'Error',str(e))
-            # print(str(e))
+            print(str(e))
             pass
     def VigenereEncrypto(self):
         self.dialog.close()
@@ -380,7 +421,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
     def decrypt(self,decrypt_type):
         try:
             result_text=''
-            print(decrypt_type)
+            # print(decrypt_type)
             text = self.Ui.Source_text.toPlainText()
             if text=='':
                 return 0
@@ -493,6 +534,15 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.WChild.setupUi(self.dialog)
                 self.dialog.show()
                 self.WChild.keyenter.clicked.connect(self.VigenereDecrypto)
+            if decrypt_type=='埃特巴什码':
+                str1 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                str2 = "zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA"
+                result_text = ""
+                for s in text:
+                    if s != ' ':
+                        result_text = result_text + str1[str2.index(s)]
+                    else:
+                        result_text = result_text + ' '
             self.Ui.Result_text.setText(result_text)
         except Exception as e :
             # QMessageBox.critical(self,'Error',str(e))
@@ -655,7 +705,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         box = QtWidgets.QMessageBox()
         box.setIcon(1)
         box.about(self, "About",
-                  "\t\t\tAbout\n       此程序为CTF密码学辅助工具，可进行常见的编码、解码、加密、解密操作，请勿非法使用！\n\t\t\tPowered by qanxiao996")
+                  "\t\t\tAbout\n       此程序为CTF密码学辅助工具，可进行常见的编码、解码、加密、解密操作，请勿非法使用！\n\t\t\tPowered by qianxiao996")
     #作者
     def author(self):
         box = QtWidgets.QMessageBox()
