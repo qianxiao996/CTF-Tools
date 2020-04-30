@@ -1,4 +1,4 @@
-﻿import html,base64,sys,string,os,urllib.parse,random
+import html,base64,sys,string,os,urllib.parse,random,collections,re
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
 from PyQt5 import QtWidgets, QtCore, QtGui
@@ -11,6 +11,7 @@ from GUI.main import Ui_MainWindow
 from GUI.sub import Ui_Form
 from GUI.data import Ui_data
 from GUI.Binary import Ui_Binary
+from GUI.KEY import Ui_KEY
 import frozen_dir
 SETUP_DIR = frozen_dir.app_path()
 sys.path.append(SETUP_DIR)
@@ -19,6 +20,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         super(MainWindows,self).__init__(parent)
         self.Ui = Ui_MainWindow()
         self.Ui.setupUi(self)
+        self.about_text = "\t\t\tAbout\n       此程序为CTF密码学辅助工具，可进行常见的编码、解码、加密、解密操作，请勿非法使用！\n\t\t\tPowered by qianxiao996"
+        self.author_text = "作者邮箱：qianxiao996@126.com\n作者主页：https://blog.qianxiao996.cn\nGithub：https://github.com/qianxiao996"
+        self.setWindowTitle('CTF-Tools V 1.2.2 202000430 By qianxiao996 ')
         self.setFixedSize(self.width(), self.height()) ##设置宽高不可变
         self.setWindowIcon(QtGui.QIcon('./logo.ico'))
         self.Ui.Source_clear_Button.clicked.connect(lambda:self.Ui.Source_text.clear())  # clear_source
@@ -63,6 +67,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.action_mosi_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_mosi_encrypt.text()))
         self.Ui.action_yunying_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_yunying_encrypt.text()))
         self.Ui.action_dangpu_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_dangpu_encrypt.text()))
+        self.Ui.action_sifang_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_sifang_encrypt.text()))
         self.Ui.action_weinijiya_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_weinijiya_encrypt.text()))
         self.Ui.action_Atbash_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_Atbash_encrypt.text()))
 
@@ -75,6 +80,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.action_yiwei_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_yiwei_decrypt.text()))
         self.Ui.action_yunxing_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_yunxing_decrypt.text()))
         self.Ui.action_dangpu_decry.triggered.connect(lambda: self.decrypt(self.Ui.action_dangpu_decry.text()))
+        self.Ui.action_sifang_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_sifang_decrypt.text()))
         self.Ui.action_weinijiya_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_weinijiya_decrypt.text()))
         self.Ui.action_Atbash_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_Atbash_decrypt.text()))
 
@@ -96,21 +102,18 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.actionAuthor.triggered.connect(self.author)
         self.readfile()
         #其他编码
-        self.Ui.actionAAencode.triggered.connect(lambda:self.show_json('AAencode'))
-        self.Ui.actionXXencode.triggered.connect(lambda:self.show_json('XXencode'))
-        self.Ui.actionJJencode.triggered.connect(lambda:self.show_json('JJencode'))
-        self.Ui.actionUUencode.triggered.connect(lambda:self.show_json('UUencode'))
-        self.Ui.action_qiaoji.triggered.connect(lambda:self.show_json('敲击码'))
-        self.Ui.actionJSfuck.triggered.connect(lambda:self.show_json('JSfuck'))
-        self.Ui.actionBrainfuck_Ook.triggered.connect(lambda:self.show_json('Brainfuck/Ook!'))
-        self.Ui.action_zhujuan.triggered.connect(lambda:self.show_json('猪圈密码'))
-        self.Ui.actionOthers.triggered.connect(lambda:self.show_json('在线网站'))
-
-    def show_json(self,type):
+        Othersmenubar = self.menuBar()  # 获取窗体的菜单栏
+        Others = Othersmenubar.addMenu("Others")
+        for i in json_data:
+            action = QAction(QIcon('exit.png'), i, self)
+            Others.addAction(action)
+        Others.triggered[QAction].connect(self.show_json)
+    def show_json(self,q):
+        # print(q.text())
         self.data_form = Ui_data()
         self.dialog = QtWidgets.QDialog(self)
         self.data_form.setupUi(self.dialog)
-        self.data_form.textEdit.setText(json_data[type])
+        self.data_form.textEdit.setText(json_data[q.text()])
         self.data_form.textEdit.moveCursor(QTextCursor.Start)
         self.data_form.textEdit.moveCursor(QtGui.QTextCursor.End, QTextCursor.MoveAnchor)  # 光标移动到最后
         self.dialog.show()
@@ -349,6 +352,13 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     ret.append(res + '0')
                 result_text= ''.join(ret)[:-1]
                 # print(result_text)
+            if encrypt_type == '四方密码':
+                self.WChild = Ui_KEY()
+                self.dialog = QtWidgets.QDialog(self)
+                self.WChild.setupUi(self.dialog)
+                self.dialog.show()
+                self.WChild.enter.clicked.connect(self.sifang_encrypt)
+
             if encrypt_type == '当铺密码':
                 try:
                     mapping_data = [[], [], [], [], [], [], [], [], [], []]
@@ -404,6 +414,53 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             #global output
             out += chr (c)
         self.Ui.Result_text.setText(out)
+    def sifang_encrypt(self):
+        self.dialog.close()
+        try:
+            text = self.Ui.Source_text.toPlainText()
+            key1 = self.WChild.Key1.text().upper()
+            key2 = self.WChild.Key2.text().upper()
+            matrix = "ABCDEFGHIJKLMNOPRSTUVWXYZ"
+            pla = "abcdefghijklmnoprstuvwxyz"
+            key1 = '['+key1+"]"
+            key2 = '['+key2+"]"
+            key1 = ''.join(collections.OrderedDict.fromkeys(key1))
+            key2 = ''.join(collections.OrderedDict.fromkeys(key2))
+            matrix1 = re.sub('[\[\]]', '', key1) + re.sub(key1, '', matrix)
+            matrix2 = re.sub('[\[\]]', '', key2) + re.sub(key2, '', matrix)
+            matrix_list1 = []
+            matrix_list2 = []
+            pla_list = []
+            for i in range(0, len(matrix1), 5):
+                matrix_list1.append(list(matrix1[i:i + 5]))
+            for i in range(0, len(matrix2), 5):
+                matrix_list2.append(list(matrix2[i:i + 5]))
+            for i in range(0, len(pla), 5):
+                pla_list.append(list(pla[i:i + 5]))
+            pla = text.replace(' ', '')
+            if len(pla) % 2 != 0:
+                pla += 'x'
+            cip = ""
+            for i in range(0, len(pla), 2):
+                data = pla[i:i + 2]
+                # 两个子母中第一个字母位置
+                first = self.find_index(data[0],pla_list)
+                # 两个子母中第二个字母位置
+                second = self.find_index(data[1],pla_list)
+                return_cip = ""
+                return_cip += matrix_list1[first[0]][second[1]]
+                return_cip += matrix_list2[second[0]][first[1]]
+                cip += return_cip
+            self.Ui.Result_text.setText(cip)
+        except Exception as  e:
+            print(str(e))
+            pass
+    # 查询明文字母位置
+    def find_index(self,x,pla_list):
+        for i in range(len(pla_list)):
+            for j in range(len(pla_list[i])):
+                if pla_list[i][j] == x:
+                    return i, j
     def zhalanEncrypto(self):
         self.dialog.close()
         plain = self.Ui.Source_text.toPlainText()
@@ -419,7 +476,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
 
     #decrypt
     def decrypt(self,decrypt_type):
-        try:
+        # try:
             result_text=''
             # print(decrypt_type)
             text = self.Ui.Source_text.toPlainText()
@@ -492,13 +549,16 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                      msg += (dict[item])
                 result_text = msg
             if decrypt_type == '移位密码':
-                inputStr = text.lower()
-                caseS1 = string.ascii_lowercase * 2
-                # caseS1 = string.ascii_uppercase * 2
+                inputStr = text
+                #
                 result=''
                 for j in range(26):
                     result_list = []
                     for i, num in zip(inputStr, range(len(inputStr))):
+                        if i.islower:
+                            caseS1 = string.ascii_lowercase * 2
+                        if i.isupper:
+                            caseS1 = string.ascii_uppercase * 2
                         status = caseS1.find(i)
                         if status != -1:
                             result_list.append(caseS1[status + j])
@@ -528,6 +588,14 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 except Exception as  e:
                     QMessageBox.critical(self, 'Error', 'dangpu.data加载错误！')
                 result_text = ''.join(map(lambda x: str(mapping_data[x] - 1), text))
+            if decrypt_type == '四方密码':
+                self.WChild = Ui_KEY()
+                self.dialog = QtWidgets.QDialog(self)
+                self.WChild.setupUi(self.dialog)
+                self.dialog.show()
+                self.WChild.enter.clicked.connect(self.sifang_decrypt)
+
+
             if decrypt_type == '维吉尼亚密码':
                 self.WChild = Ui_Form()
                 self.dialog = QtWidgets.QDialog(self)
@@ -544,9 +612,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     else:
                         result_text = result_text + ' '
             self.Ui.Result_text.setText(result_text)
-        except Exception as e :
-            # QMessageBox.critical(self,'Error',str(e))
-            pass
+        # except Exception as e :
+        #     # QMessageBox.critical(self,'Error',str(e))
+        #     pass
             # print(str(e))
     def VigenereDecrypto(self):
         self.dialog.close()
@@ -572,6 +640,63 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             else:
                 plaintext += cipher
         self.Ui.Result_text.setText(plaintext)
+    def sifang_decrypt(self):
+        self.dialog.close()
+        try:
+            # print(1)
+            text = self.Ui.Source_text.toPlainText()
+            key1 = self.WChild.Key1.text().upper()
+            key2 = self.WChild.Key2.text().upper()
+            matrix = "ABCDEFGHIJKLMNOPRSTUVWXYZ"
+            pla = "abcdefghijklmnoprstuvwxyz"
+            key1 = '[' + key1 + "]"
+            key2 = '[' + key2 + "]"
+            key1 = ''.join(collections.OrderedDict.fromkeys(key1))
+            key2 = ''.join(collections.OrderedDict.fromkeys(key2))
+            matrix1 = re.sub('[\[\]]', '', key1) + re.sub(key1, '', matrix)
+            matrix2 = re.sub('[\[\]]', '', key2) + re.sub(key2, '', matrix)
+            matrix_list1 = []
+            matrix_list2 = []
+            pla_list = []
+            # print(matrix1)
+            for i in range(0, len(matrix1), 5):
+                matrix_list1.append(list(matrix1[i:i + 5]))
+            for i in range(0, len(matrix2), 5):
+                matrix_list2.append(list(matrix2[i:i + 5]))
+            for i in range(0, len(pla), 5):
+                pla_list.append(list(pla[i:i + 5]))
+            cip = text.replace(' ', '')
+            result = ''
+            for i in range(0, len(cip), 2):
+                letter = cip[i:i + 2]
+                # 两个子母中第一个字母位置
+                first = self.find_index1(letter[0],matrix_list1)
+
+                # 两个子母中第二个字母位置
+                second = self.find_index2(letter[1],matrix_list2)
+
+                return_pla = ""
+                return_pla += pla_list[first[0]][second[1]]
+                return_pla += pla_list[second[0]][first[1]]
+                result += return_pla
+
+            self.Ui.Result_text.setText(result)
+        except Exception as e:
+            print(str(e))
+            pass
+
+    # 查询两个密文字母位置
+    def find_index1(self,x,matrix_list1):
+        for i in range(len(matrix_list1)):
+            for j in range(len(matrix_list1[i])):
+                if matrix_list1[i][j] == x:
+                    return i, j
+
+    def find_index2(self,y,matrix_list2):
+        for k in range(len(matrix_list2)):
+            for l in range(len(matrix_list2[k])):
+                if matrix_list2[k][l] == y:
+                    return k, l
     #Binary
     def Binary(self,Binary_type):
         try:
@@ -704,13 +829,12 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
     def about(self):
         box = QtWidgets.QMessageBox()
         box.setIcon(1)
-        box.about(self, "About",
-                  "\t\t\tAbout\n       此程序为CTF密码学辅助工具，可进行常见的编码、解码、加密、解密操作，请勿非法使用！\n\t\t\tPowered by qianxiao996")
+        box.about(self, "About",self.about_text)
     #作者
     def author(self):
         box = QtWidgets.QMessageBox()
         box.setIcon(1)
-        box.about(self, "Author", "作者邮箱：qianxiao996@126.com\n作者主页：https://blog.qianxiao996.cn\nGithub：https://github.com/qianxiao996")
+        box.about(self, "Author", self.author_text)
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindows()
