@@ -22,7 +22,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.setupUi(self)
         self.about_text = "\t\t\tAbout\n       此程序为CTF密码学辅助工具，可进行常见的编码、解码、加密、解密操作，请勿非法使用！\n\t\t\tPowered by qianxiao996"
         self.author_text = "作者邮箱：qianxiao996@126.com\n作者主页：https://blog.qianxiao996.cn\nGithub：https://github.com/qianxiao996"
-        self.setWindowTitle('CTF-Tools V 1.2.2 202000430 By qianxiao996 ')
+        self.setWindowTitle('CTF-Tools V 1.2.1 202000503 By qianxiao996 ')
         self.setFixedSize(self.width(), self.height()) ##设置宽高不可变
         self.setWindowIcon(QtGui.QIcon('./logo.ico'))
         self.Ui.Source_clear_Button.clicked.connect(lambda:self.Ui.Source_text.clear())  # clear_source
@@ -476,7 +476,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
 
     #decrypt
     def decrypt(self,decrypt_type):
-        # try:
+        try:
             result_text=''
             # print(decrypt_type)
             text = self.Ui.Source_text.toPlainText()
@@ -555,9 +555,10 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 for j in range(26):
                     result_list = []
                     for i, num in zip(inputStr, range(len(inputStr))):
+                        #print(i)
                         if i.islower:
                             caseS1 = string.ascii_lowercase * 2
-                        if i.isupper:
+                        if i in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
                             caseS1 = string.ascii_uppercase * 2
                         status = caseS1.find(i)
                         if status != -1:
@@ -565,7 +566,6 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                         else:
                             result_list.append(inputStr[num])
                     text2=("".join(result_list), "向右偏移了{}位".format(j))
-
                     result+= text2[0]+' '+text2[1]+'\n'
                 result_text =result
             if decrypt_type == '云影密码':
@@ -612,9 +612,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     else:
                         result_text = result_text + ' '
             self.Ui.Result_text.setText(result_text)
-        # except Exception as e :
-        #     # QMessageBox.critical(self,'Error',str(e))
-        #     pass
+        except Exception as e :
+            # QMessageBox.critical(self,'Error',str(e))
+            pass
             # print(str(e))
     def VigenereDecrypto(self):
         self.dialog.close()
