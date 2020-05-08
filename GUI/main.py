@@ -11,8 +11,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(864, 679)
-        MainWindow.setMaximumSize(QtCore.QSize(16777215, 16777188))
+        MainWindow.resize(864, 745)
+        MainWindow.setMaximumSize(QtCore.QSize(16777215, 16777215))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("C:/Users/19190/.designer/main.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
@@ -21,285 +21,98 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setStyleSheet("")
         self.centralwidget.setObjectName("centralwidget")
-        self.splitter_11 = QtWidgets.QSplitter(self.centralwidget)
-        self.splitter_11.setGeometry(QtCore.QRect(377, 391, 167, 31))
-        self.splitter_11.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_11.setObjectName("splitter_11")
-        self.Source_tihuan_result = QtWidgets.QLineEdit(self.centralwidget)
-        self.Source_tihuan_result.setGeometry(QtCore.QRect(414, 2, 113, 31))
-        self.Source_tihuan_result.setStyleSheet("QLineEdit {\n"
-"        border-radius: 4px;\n"
-"        height: 25px;\n"
-"        border: 1px solid rgb(100, 100, 100);\n"
-"        background: rgb(255, 255, 255)\n"
-"}\n"
-"QLineEdit:enabled {\n"
-"        color: rgb(175, 175, 175);\n"
-"}\n"
-"QLineEdit:enabled:hover, QLineEdit:enabled:focus {\n"
-"        color:rgb(255, 85, 255)\n"
-"}\n"
-"QLineEdit:!enabled {\n"
-"        color: rgb(155, 155, 155);\n"
-"}")
-        self.Source_tihuan_result.setObjectName("Source_tihuan_result")
+        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName("gridLayout")
         self.source_text = QtWidgets.QLabel(self.centralwidget)
-        self.source_text.setGeometry(QtCore.QRect(8, 10, 72, 15))
-        self.source_text.setStyleSheet("\n"
-"   color:rgb(170, 85, 255);\n"
-"   font:bold 20px;  ")
+        self.source_text.setMinimumSize(QtCore.QSize(130, 30))
+        self.source_text.setStyleSheet("")
         self.source_text.setObjectName("source_text")
+        self.gridLayout.addWidget(self.source_text, 0, 0, 1, 1)
         self.Source_tihuan_source = QtWidgets.QLineEdit(self.centralwidget)
-        self.Source_tihuan_source.setGeometry(QtCore.QRect(229, 2, 113, 31))
-        self.Source_tihuan_source.setStyleSheet("QLineEdit {\n"
-"        border-radius: 4px;\n"
-"        height: 25px;\n"
-"        border: 1px solid rgb(100, 100, 100);\n"
-"        background: rgb(255, 255, 255)\n"
-"}\n"
-"QLineEdit:enabled {\n"
-"        color: rgb(175, 175, 175);\n"
-"}\n"
-"QLineEdit:enabled:hover, QLineEdit:enabled:focus {\n"
-"        color: rgb(255, 85, 255)\n"
-"}\n"
-"QLineEdit:!enabled {\n"
-"        color: rgb(155, 155, 155);\n"
-"}")
+        self.Source_tihuan_source.setMinimumSize(QtCore.QSize(60, 30))
+        self.Source_tihuan_source.setStyleSheet("")
         self.Source_tihuan_source.setObjectName("Source_tihuan_source")
-        self.label2_5 = QtWidgets.QLabel(self.centralwidget)
-        self.label2_5.setGeometry(QtCore.QRect(348, 2, 66, 31))
-        self.label2_5.setStyleSheet("      font: 17px;  \n"
-"   color:rgb(170, 85, 255);\n"
-"")
-        self.label2_5.setObjectName("label2_5")
-        self.Source_text = QtWidgets.QTextEdit(self.centralwidget)
-        self.Source_text.setGeometry(QtCore.QRect(1, 35, 861, 291))
-        self.Source_text.setStyleSheet("QTextEdit {\n"
-"        border: 1px solid rgb(45, 45, 45);\n"
-"        background: rgb(255, 255, 255);\n"
-"    /* 边框颜色 */  \n"
-"    border-color:rgb(10,45,110);  \n"
-" \n"
-"    /* 边框倒角 */  \n"
-"    border-radius:5px;\n"
-"    font:20px;    \n"
-"}\n"
-"")
-        self.Source_text.setObjectName("Source_text")
-        self.result_text = QtWidgets.QLabel(self.centralwidget)
-        self.result_text.setGeometry(QtCore.QRect(10, 335, 72, 21))
-        self.result_text.setStyleSheet("\n"
-"   color:rgb(170, 85, 255);\n"
-"   font:bold 20px;  ")
-        self.result_text.setObjectName("result_text")
-        self.Result_text = QtWidgets.QTextEdit(self.centralwidget)
-        self.Result_text.setGeometry(QtCore.QRect(1, 361, 861, 291))
-        self.Result_text.setStyleSheet("QTextEdit {\n"
-"        border: 1px solid rgb(45, 45, 45);\n"
-"        background: rgb(255, 255, 255);\n"
-"    /* 边框颜色 */  \n"
-"    border-color:rgb(10,45,110);  \n"
-" \n"
-"    /* 边框倒角 */  \n"
-"    border-radius:5px;\n"
-"    font:20px;    \n"
-"}\n"
-"")
-        self.Result_text.setObjectName("Result_text")
-        self.Result_tihuan_source = QtWidgets.QLineEdit(self.centralwidget)
-        self.Result_tihuan_source.setGeometry(QtCore.QRect(230, 328, 113, 31))
-        self.Result_tihuan_source.setStyleSheet("QLineEdit {\n"
-"        border-radius: 4px;\n"
-"        height: 25px;\n"
-"        border: 1px solid rgb(100, 100, 100);\n"
-"        background: rgb(255, 255, 255)\n"
-"}\n"
-"QLineEdit:enabled {\n"
-"        color: rgb(175, 175, 175);\n"
-"}\n"
-"QLineEdit:enabled:hover, QLineEdit:enabled:focus {\n"
-"        color: rgb(255, 85, 255)\n"
-"}\n"
-"QLineEdit:!enabled {\n"
-"        color: rgb(155, 155, 155);\n"
-"}")
-        self.Result_tihuan_source.setObjectName("Result_tihuan_source")
-        self.Result_tihuan_result = QtWidgets.QLineEdit(self.centralwidget)
-        self.Result_tihuan_result.setGeometry(QtCore.QRect(414, 328, 113, 31))
-        self.Result_tihuan_result.setStyleSheet("QLineEdit {\n"
-"        border-radius: 4px;\n"
-"        height: 25px;\n"
-"        border: 1px solid rgb(100, 100, 100);\n"
-"        background: rgb(255, 255, 255)\n"
-"}\n"
-"QLineEdit:enabled {\n"
-"        color: rgb(175, 175, 175);\n"
-"}\n"
-"QLineEdit:enabled:hover, QLineEdit:enabled:focus {\n"
-"        color:rgb(255, 85, 255)\n"
-"}\n"
-"QLineEdit:!enabled {\n"
-"        color: rgb(155, 155, 155);\n"
-"}")
-        self.Result_tihuan_result.setObjectName("Result_tihuan_result")
-        self.label2_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label2_6.setGeometry(QtCore.QRect(348, 328, 66, 31))
-        self.label2_6.setStyleSheet("      font: 17px;  \n"
-"   color:rgb(170, 85, 255);\n"
-"")
-        self.label2_6.setObjectName("label2_6")
-        self.splitter_2 = QtWidgets.QSplitter(self.centralwidget)
-        self.splitter_2.setGeometry(QtCore.QRect(533, 328, 328, 31))
-        self.splitter_2.setStyleSheet("\n"
-"/*按钮普通态*/\n"
-"QPushButton\n"
-"{\n"
-"    /*字体为微软雅黑*/\n"
-"    font-family:Microsoft Yahei;\n"
-"    /*字体大小为10点*/\n"
-"    font-size:10pt;\n"
-"    /*字体颜色为白色*/    \n"
-"    color:white;\n"
-"    /*背景颜色*/  \n"
-"    background-color:rgb(170, 170, 255);\n"
-"    /*边框圆角半径为8像素*/ \n"
-"    border-radius:8px;\n"
-"}\n"
-" \n"
-"/*按钮停留态*/\n"
-"QPushButton:hover\n"
-"{\n"
-"    /*背景颜色*/  \n"
-"    background-color:rgb(44 , 137 , 255);\n"
-"}\n"
-" \n"
-"/*按钮按下态*/\n"
-"QPushButton:pressed\n"
-"{\n"
-"    /*背景颜色*/  \n"
-"    background-color:rgb(14 , 135 , 228);\n"
-"    /*左内边距为3像素，让按下时字向右移动3像素*/  \n"
-"    padding-left:3px;\n"
-"    /*上内边距为3像素，让按下时字向下移动3像素*/  \n"
-"    padding-top:3px;\n"
-"}\n"
-"")
-        self.splitter_2.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_2.setObjectName("splitter_2")
-        self.Result_tihuan_Button = QtWidgets.QPushButton(self.splitter_2)
-        self.Result_tihuan_Button.setStyleSheet("")
-        self.Result_tihuan_Button.setObjectName("Result_tihuan_Button")
-        self.Result_clear_Button = QtWidgets.QPushButton(self.splitter_2)
-        self.Result_clear_Button.setStyleSheet("")
-        self.Result_clear_Button.setObjectName("Result_clear_Button")
-        self.Result_Copy_Button = QtWidgets.QPushButton(self.splitter_2)
-        self.Result_Copy_Button.setStyleSheet("")
-        self.Result_Copy_Button.setObjectName("Result_Copy_Button")
-        self.Result_Paste_Button = QtWidgets.QPushButton(self.splitter_2)
-        self.Result_Paste_Button.setStyleSheet("")
-        self.Result_Paste_Button.setObjectName("Result_Paste_Button")
+        self.gridLayout.addWidget(self.Source_tihuan_source, 0, 1, 1, 1)
+        self.source_replace = QtWidgets.QLabel(self.centralwidget)
+        self.source_replace.setMinimumSize(QtCore.QSize(55, 30))
+        self.source_replace.setStyleSheet("")
+        self.source_replace.setObjectName("source_replace")
+        self.gridLayout.addWidget(self.source_replace, 0, 2, 1, 1)
+        self.Source_tihuan_result = QtWidgets.QLineEdit(self.centralwidget)
+        self.Source_tihuan_result.setMinimumSize(QtCore.QSize(60, 30))
+        self.Source_tihuan_result.setStyleSheet("")
+        self.Source_tihuan_result.setObjectName("Source_tihuan_result")
+        self.gridLayout.addWidget(self.Source_tihuan_result, 0, 3, 1, 1)
         self.splitter = QtWidgets.QSplitter(self.centralwidget)
-        self.splitter.setGeometry(QtCore.QRect(533, 2, 328, 31))
-        self.splitter.setStyleSheet("\n"
-"/*按钮普通态*/\n"
-"QPushButton\n"
-"{\n"
-"    /*字体为微软雅黑*/\n"
-"    font-family:Microsoft Yahei;\n"
-"    /*字体大小为10点*/\n"
-"    font-size:10pt;\n"
-"    /*字体颜色为白色*/    \n"
-"    color:white;\n"
-"    /*背景颜色*/  \n"
-"    background-color:rgb(170, 170, 255);\n"
-"    /*边框圆角半径为8像素*/ \n"
-"    border-radius:8px;\n"
-"}\n"
-" \n"
-"/*按钮停留态*/\n"
-"QPushButton:hover\n"
-"{\n"
-"    /*背景颜色*/  \n"
-"    background-color:rgb(44 , 137 , 255);\n"
-"}\n"
-" \n"
-"/*按钮按下态*/\n"
-"QPushButton:pressed\n"
-"{\n"
-"    /*背景颜色*/  \n"
-"    background-color:rgb(14 , 135 , 228);\n"
-"    /*左内边距为3像素，让按下时字向右移动3像素*/  \n"
-"    padding-left:3px;\n"
-"    /*上内边距为3像素，让按下时字向下移动3像素*/  \n"
-"    padding-top:3px;\n"
-"}\n"
-"")
+        self.splitter.setStyleSheet("")
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
         self.Source_tihuan_Button = QtWidgets.QPushButton(self.splitter)
-        self.Source_tihuan_Button.setStyleSheet("\n"
-"/*按钮普通态*/\n"
-"QPushButton\n"
-"{\n"
-"    /*字体为微软雅黑*/\n"
-"    font-family:Microsoft Yahei;\n"
-"    /*字体大小为10点*/\n"
-"    font-size:10pt;\n"
-"    /*字体颜色为白色*/    \n"
-"    color:white;\n"
-"    /*背景颜色*/  \n"
-"    background-color:rgb(170, 170, 255);\n"
-"    /*边框圆角半径为8像素*/ \n"
-"    border-radius:8px;\n"
-"}\n"
-" \n"
-"/*按钮停留态*/\n"
-"QPushButton:hover\n"
-"{\n"
-"    /*背景颜色*/  \n"
-"    background-color:rgb(44 , 137 , 255);\n"
-"}\n"
-" \n"
-"/*按钮按下态*/\n"
-"QPushButton:pressed\n"
-"{\n"
-"    /*背景颜色*/  \n"
-"    background-color:rgb(14 , 135 , 228);\n"
-"    /*左内边距为3像素，让按下时字向右移动3像素*/  \n"
-"    padding-left:3px;\n"
-"    /*上内边距为3像素，让按下时字向下移动3像素*/  \n"
-"    padding-top:3px;\n"
-"}\n"
-"")
+        self.Source_tihuan_Button.setMinimumSize(QtCore.QSize(60, 30))
+        self.Source_tihuan_Button.setStyleSheet("")
         self.Source_tihuan_Button.setObjectName("Source_tihuan_Button")
         self.Source_clear_Button = QtWidgets.QPushButton(self.splitter)
+        self.Source_clear_Button.setMinimumSize(QtCore.QSize(60, 30))
         self.Source_clear_Button.setStyleSheet("")
         self.Source_clear_Button.setObjectName("Source_clear_Button")
         self.Source_Copy_Button = QtWidgets.QPushButton(self.splitter)
+        self.Source_Copy_Button.setMinimumSize(QtCore.QSize(60, 30))
         self.Source_Copy_Button.setStyleSheet("")
         self.Source_Copy_Button.setObjectName("Source_Copy_Button")
         self.Source_Paste_Button = QtWidgets.QPushButton(self.splitter)
+        self.Source_Paste_Button.setMinimumSize(QtCore.QSize(60, 30))
         self.Source_Paste_Button.setStyleSheet("")
         self.Source_Paste_Button.setObjectName("Source_Paste_Button")
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(0, 0, 861, 441))
-        self.label.setStyleSheet("    background-color:white;")
-        self.label.setObjectName("label")
-        self.label.raise_()
-        self.splitter_11.raise_()
-        self.Source_tihuan_result.raise_()
-        self.source_text.raise_()
-        self.Source_tihuan_source.raise_()
-        self.label2_5.raise_()
-        self.Source_text.raise_()
-        self.result_text.raise_()
-        self.Result_text.raise_()
-        self.Result_tihuan_source.raise_()
-        self.Result_tihuan_result.raise_()
-        self.label2_6.raise_()
-        self.splitter_2.raise_()
-        self.splitter.raise_()
+        self.gridLayout.addWidget(self.splitter, 0, 4, 1, 1)
+        self.Source_text = QtWidgets.QTextEdit(self.centralwidget)
+        self.Source_text.setStyleSheet("")
+        self.Source_text.setObjectName("Source_text")
+        self.gridLayout.addWidget(self.Source_text, 1, 0, 1, 5)
+        self.result_text = QtWidgets.QLabel(self.centralwidget)
+        self.result_text.setMinimumSize(QtCore.QSize(130, 30))
+        self.result_text.setStyleSheet("")
+        self.result_text.setObjectName("result_text")
+        self.gridLayout.addWidget(self.result_text, 2, 0, 1, 1)
+        self.Result_tihuan_source = QtWidgets.QLineEdit(self.centralwidget)
+        self.Result_tihuan_source.setMinimumSize(QtCore.QSize(60, 30))
+        self.Result_tihuan_source.setStyleSheet("")
+        self.Result_tihuan_source.setObjectName("Result_tihuan_source")
+        self.gridLayout.addWidget(self.Result_tihuan_source, 2, 1, 1, 1)
+        self.result_replace = QtWidgets.QLabel(self.centralwidget)
+        self.result_replace.setMinimumSize(QtCore.QSize(55, 30))
+        self.result_replace.setStyleSheet("")
+        self.result_replace.setObjectName("result_replace")
+        self.gridLayout.addWidget(self.result_replace, 2, 2, 1, 1)
+        self.Result_tihuan_result = QtWidgets.QLineEdit(self.centralwidget)
+        self.Result_tihuan_result.setMinimumSize(QtCore.QSize(60, 30))
+        self.Result_tihuan_result.setStyleSheet("")
+        self.Result_tihuan_result.setObjectName("Result_tihuan_result")
+        self.gridLayout.addWidget(self.Result_tihuan_result, 2, 3, 1, 1)
+        self.splitter_2 = QtWidgets.QSplitter(self.centralwidget)
+        self.splitter_2.setStyleSheet("")
+        self.splitter_2.setOrientation(QtCore.Qt.Horizontal)
+        self.splitter_2.setObjectName("splitter_2")
+        self.Result_tihuan_Button = QtWidgets.QPushButton(self.splitter_2)
+        self.Result_tihuan_Button.setMinimumSize(QtCore.QSize(60, 30))
+        self.Result_tihuan_Button.setStyleSheet("")
+        self.Result_tihuan_Button.setObjectName("Result_tihuan_Button")
+        self.Result_clear_Button = QtWidgets.QPushButton(self.splitter_2)
+        self.Result_clear_Button.setMinimumSize(QtCore.QSize(60, 30))
+        self.Result_clear_Button.setStyleSheet("")
+        self.Result_clear_Button.setObjectName("Result_clear_Button")
+        self.Result_Copy_Button = QtWidgets.QPushButton(self.splitter_2)
+        self.Result_Copy_Button.setMinimumSize(QtCore.QSize(60, 30))
+        self.Result_Copy_Button.setStyleSheet("")
+        self.Result_Copy_Button.setObjectName("Result_Copy_Button")
+        self.Result_Paste_Button = QtWidgets.QPushButton(self.splitter_2)
+        self.Result_Paste_Button.setMinimumSize(QtCore.QSize(60, 30))
+        self.Result_Paste_Button.setStyleSheet("")
+        self.Result_Paste_Button.setObjectName("Result_Paste_Button")
+        self.gridLayout.addWidget(self.splitter_2, 2, 4, 1, 1)
+        self.Result_text = QtWidgets.QTextEdit(self.centralwidget)
+        self.Result_text.setStyleSheet("")
+        self.Result_text.setObjectName("Result_text")
+        self.gridLayout.addWidget(self.Result_text, 3, 0, 1, 5)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 864, 26))
@@ -314,8 +127,6 @@ class Ui_MainWindow(object):
         self.menuDecrypt.setObjectName("menuDecrypt")
         self.menuBinary = QtWidgets.QMenu(self.menuBar)
         self.menuBinary.setObjectName("menuBinary")
-        self.menuOthers = QtWidgets.QMenu(self.menuBar)
-        self.menuOthers.setObjectName("menuOthers")
         MainWindow.setMenuBar(self.menuBar)
         self.actionURL_UTF8 = QtWidgets.QAction(MainWindow)
         self.actionURL_UTF8.setObjectName("actionURL_UTF8")
@@ -511,6 +322,8 @@ class Ui_MainWindow(object):
         self.action_sifang_encrypt.setObjectName("action_sifang_encrypt")
         self.action_sifang_decrypt = QtWidgets.QAction(MainWindow)
         self.action_sifang_decrypt.setObjectName("action_sifang_decrypt")
+        self.actionUpdate_2 = QtWidgets.QAction(MainWindow)
+        self.actionUpdate_2.setObjectName("actionUpdate_2")
         self.menuEncode.addAction(self.actionURL_UTF8_encode)
         self.menuEncode.addAction(self.actionURL_GB2312_encode)
         self.menuEncode.addAction(self.actionUnicode_encode)
@@ -569,14 +382,11 @@ class Ui_MainWindow(object):
         self.menuBinary.addAction(self.action16_8)
         self.menuBinary.addAction(self.action16_10)
         self.menuBinary.addAction(self.action_others)
-        self.menuOthers.addAction(self.actionAbout)
-        self.menuOthers.addAction(self.actionAuthor)
         self.menuBar.addAction(self.menuEncode.menuAction())
         self.menuBar.addAction(self.menuDecode.menuAction())
         self.menuBar.addAction(self.menuEncrypt.menuAction())
         self.menuBar.addAction(self.menuDecrypt.menuAction())
         self.menuBar.addAction(self.menuBinary.menuAction())
-        self.menuBar.addAction(self.menuOthers.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -598,24 +408,22 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "CTF Tools  By qianxiao996  "))
         self.source_text.setText(_translate("MainWindow", "Source"))
-        self.label2_5.setText(_translate("MainWindow", "Replace"))
-        self.result_text.setText(_translate("MainWindow", "Result"))
-        self.label2_6.setText(_translate("MainWindow", "Replace"))
-        self.Result_tihuan_Button.setText(_translate("MainWindow", "Replace"))
-        self.Result_clear_Button.setText(_translate("MainWindow", "Clear"))
-        self.Result_Copy_Button.setText(_translate("MainWindow", "Copy"))
-        self.Result_Paste_Button.setText(_translate("MainWindow", "Paste"))
+        self.source_replace.setText(_translate("MainWindow", "Replace"))
         self.Source_tihuan_Button.setText(_translate("MainWindow", "Replace"))
         self.Source_clear_Button.setText(_translate("MainWindow", "Clear"))
         self.Source_Copy_Button.setText(_translate("MainWindow", "Copy"))
         self.Source_Paste_Button.setText(_translate("MainWindow", "Paste"))
-        self.label.setText(_translate("MainWindow", "TextLabel"))
+        self.result_text.setText(_translate("MainWindow", "Result"))
+        self.result_replace.setText(_translate("MainWindow", "Replace"))
+        self.Result_tihuan_Button.setText(_translate("MainWindow", "Replace"))
+        self.Result_clear_Button.setText(_translate("MainWindow", "Clear"))
+        self.Result_Copy_Button.setText(_translate("MainWindow", "Copy"))
+        self.Result_Paste_Button.setText(_translate("MainWindow", "Paste"))
         self.menuEncode.setTitle(_translate("MainWindow", "Encode"))
         self.menuDecode.setTitle(_translate("MainWindow", "Decode"))
         self.menuEncrypt.setTitle(_translate("MainWindow", "Encrypt"))
         self.menuDecrypt.setTitle(_translate("MainWindow", "Decrypt"))
         self.menuBinary.setTitle(_translate("MainWindow", "Binary"))
-        self.menuOthers.setTitle(_translate("MainWindow", "About"))
         self.actionURL_UTF8.setText(_translate("MainWindow", "URL-UTF8 Encode"))
         self.actionURL_GB2312.setText(_translate("MainWindow", "URL-GB2312 Encode"))
         self.actionUnicode.setText(_translate("MainWindow", "Unicode Encode"))
@@ -713,4 +521,5 @@ class Ui_MainWindow(object):
         self.action_Atbash_decrypt.setText(_translate("MainWindow", "埃特巴什码"))
         self.action_sifang_encrypt.setText(_translate("MainWindow", "四方密码"))
         self.action_sifang_decrypt.setText(_translate("MainWindow", "四方密码"))
+        self.actionUpdate_2.setText(_translate("MainWindow", "Update"))
 

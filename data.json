@@ -7,7 +7,12 @@
   "JSfuck":"https://www.bugku.com/tools/jsfuck/",
   "Brainfuck/Ook!":"https://www.splitbrain.org/services/ook",
   "猪圈密码":"http://ctf.ssleye.com/pigpen.html",
-  "在线网站":"http://ctf.ssleye.com/\n",
-  "Rabbit":"http://www.jsons.cn/rabbitencrypt/\n"
-
+  "在线网站":"http://ctf.ssleye.com/\nhttps://tool.lu/",
+  "Rabbit":"http://www.jsons.cn/rabbitencrypt/\nhttp://tools.jb51.net/password/rabbit_encode\nhttps://www.sojson.com/encrypt_rabbit.html",
+  "圣堂武士密码":"https://blog.csdn.net/zmx2473162621/article/details/103949134/",
+  "电报码":"https://www.qqxiuzi.cn/bianma/dianbao.php",
+  "Quoted-printable":"http://web.chacuo.net/charsetquotedprintable/",
+  "中文加密":"https://www.qqxiuzi.cn/bianma/wenbenjiami.php",
+  "ADFGX":"http://www.practicalcryptography.com/ciphers/adfgx-cipher/",
+  "与佛论禅":"http://www.keyfc.net/bbs/tools/tudoucode.aspx"
 }
