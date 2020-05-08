@@ -148,6 +148,8 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 f = open('QSS/Setup.txt', 'w', encoding='utf-8')
                 f.write('{"QSS": "%s"}'%json_qss[q.text()])
                 f.close()
+                python = sys.executable
+                os.execl(python, python, *sys.argv)
             except Exception as e:
                 QMessageBox.critical(self, 'Error', str(e))
                 pass
@@ -185,6 +187,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             f.close()
         except Exception as e :
             QMessageBox.critical(self,'Error',str(e))
+            pass
 
     #编码
     def encode(self,encode_type):
@@ -437,7 +440,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     with open('dangpu.data', 'r', encoding='UTF-8') as f:
                         for line in f:
                             ss = line.strip('\n').split(' ')
-                            mapping_data[int(ss[1]) - 1].append(ss[0])
+                            mapping_data[int(ss[1])].append(ss[0])
                 except Exception as  e:
                     QMessageBox.critical(self, 'Error', 'dangpu.data加载错误！')
                 try:
@@ -691,7 +694,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                             mapping_data[ss[0]] = int(ss[1])
                 except Exception as  e:
                     QMessageBox.critical(self, 'Error', 'dangpu.data加载错误！')
-                result_text = ''.join(map(lambda x: str(mapping_data[x] - 1), text))
+                result_text = ''.join(map(lambda x: str(mapping_data[x]), text))
             if decrypt_type == '四方密码':
                 self.WChild = Ui_KEY2()
                 self.dialog = QtWidgets.QDialog(self)
