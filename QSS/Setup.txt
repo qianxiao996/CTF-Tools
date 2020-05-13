@@ -1,1 +1,1 @@
-{"QSS": "black.qss"}
+{"QSS": "default.qss"}

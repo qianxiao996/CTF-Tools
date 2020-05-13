@@ -1,4 +1,5 @@
 import html,base64,sys,string,os,urllib.parse,random,collections,re
+import importlib.machinery
 import webbrowser
 
 if hasattr(sys, 'frozen'):
@@ -6,6 +7,7 @@ if hasattr(sys, 'frozen'):
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from PyQt5.QtGui import *
 import win32con,json
 import win32clipboard as wincld
@@ -23,8 +25,8 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.setupUi(self)
         self.about_text = "\t\t\tAbout\n       此程序为CTF密码学辅助工具，可进行常见的编码、解码、加密、解密操作，请勿非法使用！\n\t\t\tPowered by qianxiao996"
         self.author_text = "作者邮箱：qianxiao996@126.com\n作者主页：https://blog.qianxiao996.cn\nGithub：https://github.com/qianxiao996"
-        self.version = '1.2.2'
-        self.update_time = '202000508'
+        self.version = '1.2.3'
+        self.update_time = '20200513'
         self.setWindowTitle('CTF-Tools V '+self.version+' '+self.update_time+' By qianxiao996 ')
         # self.setFixedSize(self.width(), self.height()) ##设置宽高不可变
         self.setWindowIcon(QtGui.QIcon('./logo.ico'))
@@ -49,6 +51,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.actionStr_Hex_encode.triggered.connect(lambda: self.encode(self.Ui.actionStr_Hex_encode.text()))
         self.Ui.actionShellcode_encode.triggered.connect(lambda: self.encode(self.Ui.actionShellcode_encode.text()))
         self.Ui.actionQwerty_encode.triggered.connect(lambda: self.encode(self.Ui.actionQwerty_encode.text()))
+        self.Ui.actiontupian_base64_encode.triggered.connect(lambda: self.encode(self.Ui.actiontupian_base64_encode.text()))
         #decode
         self.Ui.actionURL_UTF8_decode.triggered.connect(lambda:self.decode(self.Ui.actionURL_UTF8_decode.text()))
         self.Ui.actionURL_GB2312_decode.triggered.connect(lambda: self.decode(self.Ui.actionURL_GB2312_decode.text()))
@@ -62,6 +65,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.actionHex_Str_decode.triggered.connect(lambda: self.decode(self.Ui.actionHex_Str_decode.text()))
         self.Ui.actionShellcode_decode.triggered.connect(lambda: self.decode(self.Ui.actionShellcode_decode.text()))
         self.Ui.actionQwerty_decode.triggered.connect(lambda: self.decode(self.Ui.actionQwerty_decode.text()))
+        self.Ui.actionbase64_tupian_decode.triggered.connect(lambda: self.decode(self.Ui.actionbase64_tupian_decode.text()))
         #encrypt
         self.Ui.actionRot13_encrypt.triggered.connect(lambda:self.encrypt(self.Ui.actionRot13_encrypt.text()))
         self.Ui.action_kaisa_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_kaisa_encrypt.text()))
@@ -117,11 +121,19 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 impMenu.addAction(sub_action)
             Website.addMenu(impMenu)
         Website.triggered[QAction].connect(self.show_json)
+        #Plugins
+        Pluginsmenubar = self.menuBar()  # 获取窗体的菜单栏
+        plugins = Pluginsmenubar.addMenu("Plugins")
+        for k in plugins_data:
+            # print(k)
+            sub_action = QAction(QIcon(''), k, self)
+            plugins.addAction(sub_action)
+        plugins.triggered[QAction].connect(self.show_plugins)
         #Others
         othersmenubar = self.menuBar()  # 获取窗体的菜单栏
         others = othersmenubar.addMenu("Others")
-        for i in ["About",'Author','Update']:
-            sub_action = QAction(QIcon(''), i, self)
+        for j in ["About",'Author','Update']:
+            sub_action = QAction(QIcon(''), j, self)
             others.addAction(sub_action)
         impMenu = QMenu("Style", self)
         for z in json_qss:
@@ -153,6 +165,20 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             except Exception as e:
                 QMessageBox.critical(self, 'Error', str(e))
                 pass
+    def show_plugins(self,q):
+        try:
+            plugins_methods = "Plugins/" + plugins_data[q.text()][:-3]
+            filename = "Plugins/" + plugins_data[q.text()]
+            text = self.Ui.Source_text.toPlainText()
+            if text=='':
+                return 0
+            nnnnnnnnnnnn1 = importlib.machinery.SourceFileLoader(plugins_methods, filename).load_module()
+            result = nnnnnnnnnnnn1.run(text)
+            self.Ui.Result_text.setText(str(result))
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', str(e))
+            pass
+
     def show_json(self,q):
         # print(q.text())
         wincld.OpenClipboard()
@@ -185,6 +211,11 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             MainWindows.setStyleSheet(self,qss_style)
             # print(json_data)
             f.close()
+            global plugins_data
+            f = open('Plugins/Plugins.json', 'r', encoding='utf-8')
+            plugins_data = json.load(f)
+            # print(plugins_data)
+            f.close()
         except Exception as e :
             QMessageBox.critical(self,'Error',str(e))
             pass
@@ -194,6 +225,17 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         try:
             result_text=''
             # print(encode_type)
+            if encode_type == '图片->base64':
+                try:
+                    filename = self.file_open(r"Text Files (*.jpg);;All files(*.*)")
+                    with open(filename, 'rb') as f:
+                        base64_data = base64.b64encode(f.read())
+                        s = base64_data.decode()
+                    self.Ui.Result_text.setText(str('data:image/%s;base64,%s' % (filename[-3:],s)))
+                    return
+                except:
+                    pass
+                    return
             text = self.Ui.Source_text.toPlainText()
             if text=='':
                 return 0
@@ -225,7 +267,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             if encode_type=='Base64':
                 text = base64.b64encode(text.encode("utf-8"))
                 result_text=str(text, encoding='utf-8')
-            if encode_type=='Str-Hex':
+            if encode_type=='Str->Hex':
                 result = ''
                 for i in text:
                     single = str(hex(ord(str(i))))
@@ -298,7 +340,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             if decode_type=='Base64':
                 text = base64.b64decode(text.encode("utf-8"))
                 result_text=str(text, encoding='utf-8')
-            if decode_type=='Hex-Str':
+            if decode_type=='Hex->Str':
                 text = text.replace('0x', '').replace('0X', '')
                 result_text = str(bytes.fromhex(text), encoding="utf-8")
             if decode_type=='Shellcode':
@@ -326,6 +368,18 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                         result_text = result_text + letter.get(text[i])
                     else:
                         result_text = result_text + ' '
+            if decode_type == 'base64->图片':
+                try:
+                    file_name = self.file_save('tupian.jpg')
+                    # print(file_name)
+                    str2 = base64.b64decode(text.replace('data:image/jpg;base64,','').replace('data:image/jpeg;base64,','').replace('data:image/png;base64,','').replace('data:image/gif;base64,',''))
+                    file1 = open(file_name, 'wb')
+                    file1.write(str2)
+                    file1.close()
+                    QMessageBox.information(self,'Success','转换成功，文件位置:%s'%file_name)
+                    result_text='转换成功，文件位置:\n%s'%file_name
+                except:
+                    pass
             if result_text!="":
                 self.Ui.Result_text.setText(str(result_text))
             else:
@@ -435,14 +489,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.WChild.enter.clicked.connect(self.sifang_encrypt)
 
             if encrypt_type == '当铺密码':
-                try:
-                    mapping_data = [[], [], [], [], [], [], [], [], [], []]
-                    with open('dangpu.data', 'r', encoding='UTF-8') as f:
-                        for line in f:
-                            ss = line.strip('\n').split(' ')
-                            mapping_data[int(ss[1])].append(ss[0])
-                except Exception as  e:
-                    QMessageBox.critical(self, 'Error', 'dangpu.data加载错误！')
+                mapping_data =[['田'], ['由'], ['中'], ['人'], ['工'], ['大'], ['王'], ['夫'], ['井'], ['羊']]
                 try:
                     result = []
                     for c in text:
@@ -686,14 +733,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                         ret.append(charList[tmp - 1])
                     result_text= ''.join(ret)
             if decrypt_type == '当铺密码':
-                try:
-                    mapping_data = {}
-                    with open('dangpu.data', 'r', encoding='UTF-8') as f:
-                        for line in f:
-                            ss = line.strip('\n').split(' ')
-                            mapping_data[ss[0]] = int(ss[1])
-                except Exception as  e:
-                    QMessageBox.critical(self, 'Error', 'dangpu.data加载错误！')
+                mapping_data ={'田': 0, '由': 1, '中': 2, '人': 3, '工': 4, '大': 5, '王': 6, '夫': 7, '井': 8, '羊': 9}
                 result_text = ''.join(map(lambda x: str(mapping_data[x]), text))
             if decrypt_type == '四方密码':
                 self.WChild = Ui_KEY2()
@@ -961,6 +1001,15 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         box.about(self, "Author", self.author_text)
     def Update(self):
         webbrowser.open("https://github.com/qianxiao996/CTF-Tools/releases")
+    # 文件打开对话框
+    def file_open(self, type):
+        fileName, selectedFilter = QFileDialog.getOpenFileName(self, (r"上传文件"), (r"C:\windows"), type)
+        return (fileName)  # 返回文件路径
+    # 保存文件对话框
+    def file_save(self, filename):
+        fileName, filetype = QFileDialog.getSaveFileName(self, (r"保存文件"), (r'C:\Users\Administrator\\' + filename),
+                                                         r"All files(*.*)")
+        return fileName
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindows()
