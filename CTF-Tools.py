@@ -25,8 +25,8 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.setupUi(self)
         self.about_text = "\t\t\tAbout\n       此程序为CTF密码学辅助工具，可进行常见的编码、解码、加密、解密操作，请勿非法使用！\n\t\t\tPowered by qianxiao996"
         self.author_text = "作者邮箱：qianxiao996@126.com\n作者主页：https://blog.qianxiao996.cn\nGithub：https://github.com/qianxiao996"
-        self.version = '1.2.3'
-        self.update_time = '20200513'
+        self.version = '1.2.4'
+        self.update_time = '20200519'
         self.setWindowTitle('CTF-Tools V '+self.version+' '+self.update_time+' By qianxiao996 ')
         # self.setFixedSize(self.width(), self.height()) ##设置宽高不可变
         self.setWindowIcon(QtGui.QIcon('./logo.ico'))
@@ -77,6 +77,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.action_sifang_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_sifang_encrypt.text()))
         self.Ui.action_weinijiya_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_weinijiya_encrypt.text()))
         self.Ui.action_Atbash_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_Atbash_encrypt.text()))
+        self.Ui.action_fangshe_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_fangshe_encrypt.text()))
 
         #decrypt
         self.Ui.actionRot13_decrypt.triggered.connect(lambda:self.decrypt(self.Ui.actionRot13_decrypt.text()))
@@ -90,6 +91,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.action_sifang_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_sifang_decrypt.text()))
         self.Ui.action_weinijiya_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_weinijiya_decrypt.text()))
         self.Ui.action_Atbash_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_Atbash_decrypt.text()))
+        self.Ui.action_fangshe_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_fangshe_decrypt.text()))
 
         #进制转换
         self.Ui.action2_8.triggered.connect(lambda:self.Binary(self.Ui.action2_8.text()))
@@ -457,7 +459,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 result_text =msg
             if encrypt_type=='云影密码':
                 charList = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
-                cipher = [i for i in text]
+                cipher = [i for i in text.upper()]
                 tmp = []
                 ret = []
                 for i in range(len(cipher)):
@@ -487,7 +489,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.WChild.setupUi(self.dialog)
                 self.dialog.show()
                 self.WChild.enter.clicked.connect(self.sifang_encrypt)
-
+                return
             if encrypt_type == '当铺密码':
                 mapping_data =[['田'], ['由'], ['中'], ['人'], ['工'], ['大'], ['王'], ['夫'], ['井'], ['羊']]
                 try:
@@ -499,6 +501,14 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     result_text = ''.join(result)
                 except:
                     result_text='未找到该字符串对应的中文！'
+            if encrypt_type == '仿射密码':
+                self.WChild = Ui_KEY2()
+                self.dialog = QtWidgets.QDialog(self)
+                self.WChild.setupUi(self.dialog)
+                self.dialog.show()
+                self.WChild.enter.clicked.connect(self.fangshe_encrypt)
+                return
+
             if encrypt_type=='维吉尼亚密码':
                 self.WChild = Ui_KEY1()
                 self.dialog = QtWidgets.QDialog(self)
@@ -593,6 +603,50 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.Ui.Result_text.setText('加密失败！')
 
         except Exception as  e:
+            print(str(e))
+            pass
+
+    def gcd(self,a, b):
+        if (a < b):
+            t = a
+            a = b
+            b = t
+
+        while (0 != b):
+            t = a
+            a = b
+            b = t % b
+        return a
+    def fangshe_encrypt(self):
+        self.dialog.close()
+        try:
+            letter_list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"  # 字母表
+            text = (self.Ui.Source_text.toPlainText())
+            key1 = self.WChild.Key1.text()
+            key2 = self.WChild.Key2.text()
+            # print(text,key2,key1)
+            try:
+                if (0 == int(key1.isdigit()) or 0 == int(key2.isdigit())):
+                    self.Ui.Result_text.setText('输入有误! 密钥为数字。')
+                if (self.gcd(int(key1),26)!=1):
+                    self.Ui.Result_text.setText('输入有误! key1和26必须互素。')
+                    return 0
+            except:
+                self.Ui.Result_text.setText('输入有误!')
+
+            else:
+                ciphertext = ""
+                for ch in text:  # 遍历明文
+                    if ch.isalpha():  # 明文是否为字母,如果是,则判断大小写,分别进行加密
+                        if ch.isupper():
+                            ciphertext += letter_list[(int(key1) * (ord(ch) - 65) + int(key2)) % 26]
+                        else:
+                            ciphertext += letter_list[(int(key1) * (ord(ch) - 97) + int(key2)) % 26].lower()
+                    else:  # 如果密文不为字母,直接添加到密文字符串里
+                        ciphertext += ch
+                self.Ui.Result_text.setText(ciphertext)
+        except Exception as  e:
+            self.Ui.Result_text.setText('加密失败!')
             print(str(e))
             pass
     # 查询明文字母位置
@@ -742,6 +796,13 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.dialog.show()
                 self.WChild.enter.clicked.connect(self.sifang_decrypt)
                 return 0
+            if decrypt_type == '仿射密码':
+                self.WChild = Ui_KEY2()
+                self.dialog = QtWidgets.QDialog(self)
+                self.WChild.setupUi(self.dialog)
+                self.dialog.show()
+                self.WChild.enter.clicked.connect(self.fangshe_decrypt)
+                return 0
 
             if decrypt_type == '维吉尼亚密码':
                 self.WChild = Ui_KEY1()
@@ -841,6 +902,57 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         except Exception as e:
             print(str(e))
             pass
+
+    # 求逆元函数
+    def GetInverse(self,a, m):
+        for i in range(m):
+            if (1 == (a * i) % m):
+                return i
+        return a
+    def fangshe_decrypt(self):
+        self.dialog.close()
+        try:
+            key1 = self.WChild.Key1.text()
+            key2 = self.WChild.Key2.text()
+            try:
+                if (0 == int(key1.isdigit()) or 0 == int(key2.isdigit())):
+                    self.Ui.Result_text.setText('输入有误! 密钥为数字。')
+                    return
+                if (self.gcd(int(key1),26)!=1):
+                    key1_list = []
+                    result = ''
+                    for i in range(0,int(key1)):
+                        if self.gcd(i,26)==1:
+                            key1_list.append(i)
+                    for z in key1_list:
+                        result+= 'key1:%s'%z+'   明文:'+self.fangshe_getdecrypt(int(z), int(key2))+'\n'
+                    self.Ui.Result_text.setText('输入有误! key1和26必须互素。以下为爆破key1的结果\n'+result)
+                    return 0
+            except:
+                self.Ui.Result_text.setText('输入有误!')
+            else:
+                self.Ui.Result_text.setText(self.fangshe_getdecrypt(int(key1),int(key2)))
+        except Exception as e:
+            self.Ui.Result_text.setText('解密失败。')
+            print(str(e))
+            pass
+    def fangshe_getdecrypt(self,key1,key2):
+        try:
+            text = (self.Ui.Source_text.toPlainText())
+            letter_list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"  # 字母表
+            plaintext = ""
+            for ch in text:  # 遍历密文
+                if ch.isalpha():  # 密文为否为字母,如果是,则判断大小写,分别进行解密
+                    if ch.isupper():
+                        plaintext += letter_list[self.GetInverse(key1, 26) * (ord(ch) - 65 - key2) % 26]
+                    else:
+                        plaintext += letter_list[self.GetInverse(key1, 26) * (ord(ch) - 97 - key2) % 26].lower()
+                else:  # 如果密文不为字母,直接添加到明文字符串里
+                    plaintext += ch
+            return  plaintext
+        except:
+            return
+
 
     # 查询两个密文字母位置
     def find_index1(self,x,matrix_list1):
