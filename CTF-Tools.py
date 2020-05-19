@@ -2,12 +2,12 @@ import html,base64,sys,string,os,urllib.parse,random,collections,re
 import importlib.machinery
 import webbrowser
 
+import requests
+
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
 from PyQt5.QtGui import *
 import win32con,json
 import win32clipboard as wincld
@@ -18,6 +18,8 @@ from GUI.KEY_2 import Ui_KEY2
 import frozen_dir
 SETUP_DIR = frozen_dir.app_path()
 sys.path.append(SETUP_DIR)
+version = '1.2.4'
+update_time = '20200519'
 class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
     def __init__(self,parent=None):
         super(MainWindows,self).__init__(parent)
@@ -25,9 +27,8 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.setupUi(self)
         self.about_text = "\t\t\tAbout\n       此程序为CTF密码学辅助工具，可进行常见的编码、解码、加密、解密操作，请勿非法使用！\n\t\t\tPowered by qianxiao996"
         self.author_text = "作者邮箱：qianxiao996@126.com\n作者主页：https://blog.qianxiao996.cn\nGithub：https://github.com/qianxiao996"
-        self.version = '1.2.4'
-        self.update_time = '20200519'
-        self.setWindowTitle('CTF-Tools V '+self.version+' '+self.update_time+' By qianxiao996 ')
+
+        self.setWindowTitle('CTF-Tools V '+version+' '+update_time+' By qianxiao996 ')
         # self.setFixedSize(self.width(), self.height()) ##设置宽高不可变
         self.setWindowIcon(QtGui.QIcon('./logo.ico'))
         self.Ui.Source_clear_Button.clicked.connect(lambda:self.Ui.Source_text.clear())  # clear_source
@@ -1126,4 +1127,15 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindows()
     window.show()
+    try:
+        response = requests.get("https://qianxiao996.cn/ctf-tools/version.txt",timeout = 2)
+        if (int(response.text.replace('.',''))>int(version.replace('.',''))):
+            reply = QMessageBox.question(window,'软件更新', "检测到软件已发布新版本，是否前去下载?",QMessageBox.Yes | QMessageBox.No,
+                                         QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                webbrowser.open('https://github.com/qianxiao996/CTF-Tools/releases')
+            else:
+                pass
+    except:
+        pass
     sys.exit(app.exec_())
