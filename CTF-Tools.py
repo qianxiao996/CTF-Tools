@@ -18,8 +18,8 @@ from GUI.KEY_2 import Ui_KEY2
 import frozen_dir
 SETUP_DIR = frozen_dir.app_path()
 sys.path.append(SETUP_DIR)
-version = '1.2.4'
-update_time = '20200519'
+version = '1.2.5'
+update_time = '20201112'
 class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
     def __init__(self,parent=None):
         super(MainWindows,self).__init__(parent)
@@ -322,15 +322,21 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             if decode_type=='ASCII':
                 if ':' in text:
                     text = text.split(":")
-                if ' ' in text:
+                elif ' ' in text:
                     text = text.split(" ")
-                if ';' in text:
+                elif ';' in text:
                     text = text.split(";")
-                if ',' in text:
+                elif ',' in text:
                     text = text.split(",")
+                else: 
+                    list22 = []
+                    list22.append(text)
+                    text=list22
+                # print(text)
                 result = ''
                 for i in text:
                     if i != '':
+                        # print(i)
                         # print(chr(int(i)))
                         result = result + chr(int(i))
                 result_text =result
@@ -535,7 +541,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.Ui.Result_text.setText('加密失败!')
         except Exception as e :
             # QMessageBox.critical(self,'Error',str(e))
-            print(str(e))
+            # print(str(e))
             pass
     def VigenereEncrypto(self):
         self.dialog.close()
@@ -604,7 +610,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.Ui.Result_text.setText('加密失败！')
 
         except Exception as  e:
-            print(str(e))
+            # print(str(e))
             pass
 
     def gcd(self,a, b):
@@ -648,7 +654,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.Ui.Result_text.setText(ciphertext)
         except Exception as  e:
             self.Ui.Result_text.setText('加密失败!')
-            print(str(e))
+            # print(str(e))
             pass
     # 查询明文字母位置
     def find_index(self,x,pla_list):
@@ -901,7 +907,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.Ui.Result_text.setText('解密失败！')
 
         except Exception as e:
-            print(str(e))
+            # print(str(e))
             pass
 
     # 求逆元函数
@@ -935,7 +941,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.Ui.Result_text.setText(self.fangshe_getdecrypt(int(key1),int(key2)))
         except Exception as e:
             self.Ui.Result_text.setText('解密失败。')
-            print(str(e))
+            # print(str(e))
             pass
     def fangshe_getdecrypt(self,key1,key2):
         try:
