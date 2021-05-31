@@ -1,3 +1,4 @@
+import binascii
 import html,base64,sys,string,os,urllib.parse,random,collections,re
 import importlib.machinery
 import webbrowser
@@ -18,8 +19,8 @@ from GUI.KEY_2 import Ui_KEY2
 import frozen_dir
 SETUP_DIR = frozen_dir.app_path()
 sys.path.append(SETUP_DIR)
-version = '1.2.6'
-update_time = '20201217'
+version = '1.2.7'
+update_time = '20210531'
 class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
     def __init__(self,parent=None):
         super(MainWindows,self).__init__(parent)
@@ -53,6 +54,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.actionShellcode_encode.triggered.connect(lambda: self.encode(self.Ui.actionShellcode_encode.text()))
         self.Ui.actionQwerty_encode.triggered.connect(lambda: self.encode(self.Ui.actionQwerty_encode.text()))
         self.Ui.actiontupian_base64_encode.triggered.connect(lambda: self.encode(self.Ui.actiontupian_base64_encode.text()))
+        self.Ui.actiontupian_hex_encode.triggered.connect(lambda: self.encode(self.Ui.actiontupian_hex_encode.text()))
         #decode
         self.Ui.actionURL_UTF8_decode.triggered.connect(lambda:self.decode(self.Ui.actionURL_UTF8_decode.text()))
         self.Ui.actionURL_GB2312_decode.triggered.connect(lambda: self.decode(self.Ui.actionURL_GB2312_decode.text()))
@@ -67,6 +69,8 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.actionShellcode_decode.triggered.connect(lambda: self.decode(self.Ui.actionShellcode_decode.text()))
         self.Ui.actionQwerty_decode.triggered.connect(lambda: self.decode(self.Ui.actionQwerty_decode.text()))
         self.Ui.actionbase64_tupian_decode.triggered.connect(lambda: self.decode(self.Ui.actionbase64_tupian_decode.text()))
+        self.Ui.actionhex_tupian_decode.triggered.connect(
+            lambda: self.decode(self.Ui.actionhex_tupian_decode.text()))
         #encrypt
         self.Ui.actionRot13_encrypt.triggered.connect(lambda:self.encrypt(self.Ui.actionRot13_encrypt.text()))
         self.Ui.action_kaisa_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_kaisa_encrypt.text()))
@@ -163,8 +167,8 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 f = open('QSS/Setup.txt', 'w', encoding='utf-8')
                 f.write('{"QSS": "%s"}'%json_qss[q.text()])
                 f.close()
-                python = sys.executable
-                os.execl(python, python, *sys.argv)
+                # python = sys.executable
+                # os.execl(python, python, *sys.argv)
             except Exception as e:
                 QMessageBox.critical(self, 'Error', str(e))
                 pass
@@ -229,13 +233,25 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         try:
             result_text=''
             # print(encode_type)
-            if encode_type == '图片->base64':
+            if encode_type == '图片->Base64':
                 try:
                     filename = self.file_open(r"Text Files (*.jpg);;All files(*.*)")
                     with open(filename, 'rb') as f:
                         base64_data = base64.b64encode(f.read())
                         s = base64_data.decode()
                     self.Ui.Result_text.setText(str('data:image/%s;base64,%s' % (filename[-3:],s)))
+                    return
+                except:
+                    self.Ui.Result_text.setText('转换失败！')
+                    return
+            elif encode_type == '图片->Hex':
+                try:
+                    filename = self.file_open(r"Text Files (*.jpg);;All files(*.*)")
+                    with open(filename, 'rb') as f:
+                        hex_data =f.read()
+                        hexstr = binascii.hexlify(hex_data).decode("utf-8")
+                        hexstr =hexstr.upper()
+                    self.Ui.Result_text.setText(str('%s' % (hexstr)))
                     return
                 except:
                     self.Ui.Result_text.setText('转换失败！')
@@ -383,7 +399,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                         result_text = result_text + letter.get(text[i])
                     else:
                         result_text = result_text + ' '
-            elif decode_type == 'base64->图片':
+            elif decode_type == 'Base64->图片':
                 try:
                     file_name = self.file_save('tupian.jpg')
                     # print(file_name)
@@ -394,6 +410,20 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     QMessageBox.information(self,'Success','转换成功，文件位置:%s'%file_name)
                     result_text='转换成功，文件位置:\n%s'%file_name
                 except:
+                    result_text="转换失败！"
+                    pass
+            elif decode_type == 'Hex->图片':
+                try:
+                    file_name = self.file_save('hextupian.jpg')
+                    # print(file_name)
+                    file1 = open(file_name, 'wb')
+                    pic = binascii.a2b_hex(text.encode())
+                    file1.write(pic)
+                    file1.close()
+                    QMessageBox.information(self,'Success','转换成功，文件位置:%s'%file_name)
+                    result_text='转换成功，文件位置:\n%s'%file_name
+                except:
+                    result_text="转换失败！"
                     pass
             if result_text!="":
                 self.Ui.Result_text.setText(str(result_text))

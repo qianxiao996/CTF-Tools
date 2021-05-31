@@ -19,6 +19,7 @@
 - [x] Shellcode
 - [x] qwerty(键盘密码)
 - [x] 图片转base64
+- [x] 图片转hex
 
 ##### 支持的加密解密:
 
