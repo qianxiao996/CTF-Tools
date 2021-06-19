@@ -222,7 +222,7 @@ QPushButton {
         stop: 0 #EEEEEF, stop: 0.05 #DADADF,stop: 0.5 #DADADF, 
         stop: 0.9 #EEEEEF, stop: 1 #EEEEEF);*/
     padding: 1px 1px;
-    min-width: 50px;
+    min-width: 70px;
     min-height: 25px;
 }
 

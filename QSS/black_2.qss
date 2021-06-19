@@ -367,7 +367,6 @@ QToolButton#transferButton:hover{
 QPushButton{
 		border-radius: 4px;
 		border: none;
-		width: 75px;
 		height: 25px;
 }
 QPushButton:enabled {

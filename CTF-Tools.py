@@ -3,6 +3,7 @@ import html,base64,sys,string,os,urllib.parse,random,collections,re
 import importlib.machinery
 import webbrowser
 
+import configparser
 import requests
 
 if hasattr(sys, 'frozen'):
@@ -19,16 +20,16 @@ from GUI.KEY_2 import Ui_KEY2
 import frozen_dir
 SETUP_DIR = frozen_dir.app_path()
 sys.path.append(SETUP_DIR)
-version = '1.2.7'
-update_time = '20210531'
+version = '1.2.8'
+update_time = '20210619'
 class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
     def __init__(self,parent=None):
         super(MainWindows,self).__init__(parent)
         self.Ui = Ui_MainWindow()
         self.Ui.setupUi(self)
         self.about_text = "\t\t\tAbout\n       此程序为CTF密码学辅助工具，可进行常见的编码、解码、加密、解密操作，请勿非法使用！\n\t\t\tPowered by qianxiao996"
-        self.author_text = "作者邮箱：qianxiao996@126.com\n作者主页：https://blog.qianxiao996.cn\nGithub：https://github.com/qianxiao996"
-
+        self.author_text = "作者邮箱：qianxiao996@126.com\nGithub：https://github.com/qianxiao996"
+        self.load_config()
         self.setWindowTitle('CTF-Tools V '+version+' '+update_time+' By qianxiao996 ')
         # self.setFixedSize(self.width(), self.height()) ##设置宽高不可变
         self.setWindowIcon(QtGui.QIcon('./logo.ico'))
@@ -143,11 +144,36 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             sub_action = QAction(QIcon(''), j, self)
             others.addAction(sub_action)
         impMenu = QMenu("Style", self)
-        for z in json_qss:
+        for z in  config_setup.options('QSS_List'):
             sub_action = QAction(QIcon(''), z, self)
             impMenu.addAction(sub_action)
         others.addMenu(impMenu)
         others.triggered[QAction].connect(self.show_others)
+    def load_config(self):
+        try:
+            global config_setup
+            global qss_style
+            # 实例化configParser对象
+            config_setup = configparser.ConfigParser()
+            # -read读取ini文件
+            config_setup.read('config.ini', encoding='utf-8')
+            if 'QSS_Setup' not in config_setup:  # 如果分组type不存在则插入type分组
+                config_setup.add_section('QSS_Setup')
+                config_setup.set("QSS_Setup", "QSS", 'default.qss')
+                config_setup.write(open('config.ini', "r+", encoding="utf-8"))  # r+模式
+                qss_Setup = 'default.qss'
+            else:
+                qss_Setup = config_setup.get('QSS_Setup', 'QSS')
+            with open("QSS/" + qss_Setup, 'r', encoding='utf-8') as f:
+                qss_style = f.read()
+                f.close()
+
+            MainWindows.setStyleSheet(self, qss_style)
+            f.close()
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', str(e))
+            pass
+
     def show_others(self,q):
         if q.text() =="About":
             self.about()
@@ -160,12 +186,12 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             return
         else:
             try:
-                with open("QSS/" + json_qss[q.text()], 'r', encoding='utf-8') as f:
+                filename = config_setup.get('QSS_List', q.text())
+                with open("QSS/" +filename, 'r', encoding='utf-8') as f:
                     qss_style = f.read()
                     f.close()
                 MainWindows.setStyleSheet(self, qss_style)
-                f = open('QSS/Setup.txt', 'w', encoding='utf-8')
-                f.write('{"QSS": "%s"}'%json_qss[q.text()])
+                config_setup.set("QSS_Setup", "QSS", filename)
                 f.close()
                 # python = sys.executable
                 # os.execl(python, python, *sys.argv)
@@ -178,11 +204,11 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             filename = "Plugins/" + plugins_data[q.text()]
             text = self.Ui.Source_text.toPlainText()
             if text=='':
-                self.Ui.Result_text.setText('请输入一个源字符串！')
+                self.Ui.Result_text.setPlainText('请输入一个源字符串！')
                 return 0
             nnnnnnnnnnnn1 = importlib.machinery.SourceFileLoader(plugins_methods, filename).load_module()
             result = nnnnnnnnnnnn1.run(text)
-            self.Ui.Result_text.setText(str(result))
+            self.Ui.Result_text.setPlainText(str(result))
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
             pass
@@ -202,18 +228,13 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
     def readfile(self):
         try:
             global json_data
-            f=open('data.json','r',encoding='utf-8')
+            f=open('Plugins//data.json','r',encoding='utf-8')
             json_data=json.load(f)
             # print(json_data)
             f.close()
-            global json_qss
-            f=open('QSS/list.txt','r',encoding='utf-8')
-            json_qss=json.load(f)
-            # print(json_data)
-            f.close()
-            f=open('QSS/Setup.txt','r',encoding='utf-8')
-            qss_Setup=json.load(f)
-            with open("QSS/"+qss_Setup["QSS"], 'r', encoding='utf-8') as f:
+            qss_Setup = config_setup.get('QSS_Setup', 'QSS')
+
+            with open("QSS/"+qss_Setup, 'r', encoding='utf-8') as f:
                 qss_style = f.read()
                 f.close()
             MainWindows.setStyleSheet(self,qss_style)
@@ -239,10 +260,10 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     with open(filename, 'rb') as f:
                         base64_data = base64.b64encode(f.read())
                         s = base64_data.decode()
-                    self.Ui.Result_text.setText(str('data:image/%s;base64,%s' % (filename[-3:],s)))
+                    self.Ui.Result_text.setPlainText(str('data:image/%s;base64,%s' % (filename[-3:],s)))
                     return
                 except:
-                    self.Ui.Result_text.setText('转换失败！')
+                    self.Ui.Result_text.setPlainText('转换失败！')
                     return
             elif encode_type == '图片->Hex':
                 try:
@@ -251,14 +272,14 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                         hex_data =f.read()
                         hexstr = binascii.hexlify(hex_data).decode("utf-8")
                         hexstr =hexstr.upper()
-                    self.Ui.Result_text.setText(str('%s' % (hexstr)))
+                    self.Ui.Result_text.setPlainText(str('%s' % (hexstr)))
                     return
                 except:
-                    self.Ui.Result_text.setText('转换失败！')
+                    self.Ui.Result_text.setPlainText('转换失败！')
                     return
             text = self.Ui.Source_text.toPlainText()
             if text=='':
-                self.Ui.Result_text.setText('请输入一个源字符串！')
+                self.Ui.Result_text.setPlainText('请输入一个源字符串！')
                 return 0
             # print(encode_type)
             if encode_type=='URL-UTF8':
@@ -281,6 +302,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     result = str(result) + str(ord(str(i))) + ' '
                 result_text=str(result)[:-1]
             elif encode_type=='Base16':
+                text = text.lower()
                 text = base64.b16encode(text.encode("utf-8"))
                 result_text=str(text, encoding='utf-8')
             elif encode_type=='Base32':
@@ -294,7 +316,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 for i in text:
                     single = str(hex(ord(str(i))))
                     result = result + single
-                result_text='0x' + (str(result)).replace('0x', '')
+                result_text=(str(result)).replace('0x', '')
             elif encode_type=='Shellcode':
                 result = ''
                 for i in text:
@@ -314,11 +336,11 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     else:
                         result_text ='Qwerty只能对字母加密!'
             if result_text!="":
-                self.Ui.Result_text.setText(str(result_text))
+                self.Ui.Result_text.setPlainText(str(result_text))
             else:
-                self.Ui.Result_text.setText("编码失败！")
+                self.Ui.Result_text.setPlainText("编码失败！")
         except Exception as e :
-            self.Ui.Result_text.setText(str(e))
+            self.Ui.Result_text.setPlainText(str(e))
             pass
             # print(str(e))
     #解码
@@ -326,9 +348,10 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         try:
             result_text=''
             # print(decode_type)
-            text = self.Ui.Source_text.toPlainText()
+            text = self.Ui.Source_text.toPlainText().strip()
+
             if text=='':
-                self.Ui.Result_text.setText('请输入一个源字符串！') 
+                self.Ui.Result_text.setPlainText('请输入一个源字符串！')
                 return 0
             if decode_type=='URL-UTF8':
                 result_text = str(urllib.parse.unquote(text))
@@ -363,6 +386,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                         result = result + chr(int(i))
                 result_text =result
             elif decode_type=='Base16':
+                text = text.upper()
                 text = base64.b16decode(text.encode("utf-8"))
                 result_text=str(text, encoding='utf-8')
             elif decode_type=='Base32':
@@ -375,10 +399,18 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 text = text.replace('0x', '').replace('0X', '')
                 result_text = str(bytes.fromhex(text), encoding="utf-8")
             elif decode_type=='Shellcode':
+                text =text.lower()
                 result = ''
-                text = text.split('\\x')
+                if "0x" in text and "\\x" not in text:
+                    text = text.split('0x')
+                elif  "\\x" in text and "0x" not in text:
+                    text = text.split('\\x')
+                else:
+                    result_text="请输入正确的格式，如：\n\\x61\\x00\\x62\\x00\\x63\n0x610x000x620x000x63"
+                    self.Ui.Result_text.setPlainText(str(result_text))
+                    return
                 for i in text:
-                    single = str(bytes.fromhex(i), encoding="utf-8")
+                    single = str(bytes.fromhex(i.rjust(2,'0')), encoding="utf-8")
                     result = result + single
                 result_text =str(result)
             elif decode_type=='Qwerty':
@@ -387,7 +419,6 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     'i': 'h', 'o': 'i', 'p': 'j', 'a': 'k', 's': 'l', 'd': 'm', 'f': 'n',
                     'g': 'o', 'h': 'p', 'j': 'q', 'k': 'r', 'l': 's', 'z': 't',
                     'x': 'u', 'c': 'v', 'v': 'w', 'b': 'x', 'n': 'y', 'm': 'z',
-
                     'Q': 'A', 'W': 'B', 'E': 'C', 'R': 'D', 'T': 'E', 'Y': 'F', 'U': 'G',
                     'I': 'H', 'O': 'I', 'P': 'J', 'A': 'K', 'S': 'L', 'D': 'M', 'F': 'N',
                     'G': 'O', 'H': 'P', 'J': 'Q', 'K': 'R', 'L': 'S', 'Z': 'T',
@@ -426,11 +457,11 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     result_text="转换失败！"
                     pass
             if result_text!="":
-                self.Ui.Result_text.setText(str(result_text))
+                self.Ui.Result_text.setPlainText(str(result_text))
             else:
-                self.Ui.Result_text.setText('解码失败!')
+                self.Ui.Result_text.setPlainText('解码失败!')
         except Exception as e :
-            self.Ui.Result_text.setText(str(e)) 
+            self.Ui.Result_text.setPlainText(str(e))
             # print(e)
             pass
     #encrypt
@@ -438,9 +469,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         try:
             result_text=''
             # print(encrypt_type)
-            text = self.Ui.Source_text.toPlainText()
+            text = self.Ui.Source_text.toPlainText().strip()
             if text=='':
-                self.Ui.Result_text.setText('请输入一个源字符串！')
+                self.Ui.Result_text.setPlainText('请输入一个源字符串！')
                 return 0
             if encrypt_type=='Rot13':
                 d = {chr(i + c): chr((i + 13) % 26 + c) for i in range(26) for c in (65, 97)}
@@ -493,7 +524,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                         '()': '-.--.-','-': '-....-','.': '.-.-.-'
                         }
                 msg = ''
-                for char in text:
+                for char in text.upper() :
                     if char in CODE:
                         if char == ' ':
                             pass
@@ -574,23 +605,23 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     else:
                         result_text = '埃特巴什码只能对英文字母加密！'
             if result_text!="":
-                self.Ui.Result_text.setText(result_text)
+                self.Ui.Result_text.setPlainText(result_text)
             else:
-                self.Ui.Result_text.setText('加密失败!')
+                self.Ui.Result_text.setPlainText('加密失败!')
         except Exception as e :
-            self.Ui.Result_text.setText(str(e)) 
+            self.Ui.Result_text.setPlainText(str(e))
             # QMessageBox.critical(self,'Error',str(e))
             # print(str(e))
             pass
     def VigenereEncrypto(self):
         try:
             self.dialog.close()
-            text = self.Ui.Source_text.toPlainText()
+            text = self.Ui.Source_text.toPlainText().strip().lower()
             key = self.WChild.key.text()
             ptLen = len(text)
             keyLen =  len(key)
             if keyLen==0:
-                self.Ui.Result_text.setText(str('请输入一个合法的key！')) 
+                self.Ui.Result_text.setPlainText(str('请输入一个合法的key！'))
                 return 0
             quotient = ptLen // keyLen    #商
             remainder = ptLen % keyLen    #余
@@ -607,15 +638,15 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 out += chr (c)
 
             if out!='':
-                self.Ui.Result_text.setText(out)
+                self.Ui.Result_text.setPlainText(out)
             else:
-                self.Ui.Result_text.setText('加密失败！')
+                self.Ui.Result_text.setPlainText('加密失败！')
         except Exception as e :
-            self.Ui.Result_text.setText(str(e)) 
+            self.Ui.Result_text.setPlainText(str(e))
     def sifang_encrypt(self):
         self.dialog.close()
         try:
-            text = (self.Ui.Source_text.toPlainText()).lower()
+            text = (self.Ui.Source_text.toPlainText().strip()).lower()
             key1 = self.WChild.Key1.text().upper()
             key2 = self.WChild.Key2.text().upper()
             matrix = "ABCDEFGHIJKLMNOPRSTUVWXYZ"
@@ -650,9 +681,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 return_cip += matrix_list2[second[0]][first[1]]
                 cip += return_cip
             if cip != '':
-                self.Ui.Result_text.setText(cip)
+                self.Ui.Result_text.setPlainText(cip)
             else:
-                self.Ui.Result_text.setText('加密失败！')
+                self.Ui.Result_text.setPlainText('加密失败！')
 
         except Exception as  e:
             # print(str(e))
@@ -673,18 +704,18 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.dialog.close()
         try:
             letter_list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"  # 字母表
-            text = (self.Ui.Source_text.toPlainText())
+            text = (self.Ui.Source_text.toPlainText().strip())
             key1 = self.WChild.Key1.text()
             key2 = self.WChild.Key2.text()
             # print(text,key2,key1)
             try:
                 if (0 == int(key1.isdigit()) or 0 == int(key2.isdigit())):
-                    self.Ui.Result_text.setText('输入有误! 密钥为数字。')
+                    self.Ui.Result_text.setPlainText('输入有误! 密钥为数字。')
                 if (self.gcd(int(key1),26)!=1):
-                    self.Ui.Result_text.setText('输入有误! key1和26必须互素。')
+                    self.Ui.Result_text.setPlainText('输入有误! key1和26必须互素。')
                     return 0
             except:
-                self.Ui.Result_text.setText('输入有误!')
+                self.Ui.Result_text.setPlainText('输入有误!')
 
             else:
                 ciphertext = ""
@@ -696,9 +727,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                             ciphertext += letter_list[(int(key1) * (ord(ch) - 97) + int(key2)) % 26].lower()
                     else:  # 如果密文不为字母,直接添加到密文字符串里
                         ciphertext += ch
-                self.Ui.Result_text.setText(ciphertext)
+                self.Ui.Result_text.setPlainText(ciphertext)
         except Exception as  e:
-            self.Ui.Result_text.setText('加密失败!')
+            self.Ui.Result_text.setPlainText('加密失败!')
             # print(str(e))
             pass
     # 查询明文字母位置
@@ -709,7 +740,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     return i, j
     def zhalanEncrypto(self):
         self.dialog.close()
-        plain = self.Ui.Source_text.toPlainText()
+        plain = self.Ui.Source_text.toPlainText().strip()
         try:
             n = int(self.WChild_zhalan.key.text())
             ans = ''
@@ -722,9 +753,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         except:
             ans = "请输入正确的分组！"
         if ans != '':
-            self.Ui.Result_text.setText(ans)
+            self.Ui.Result_text.setPlainText(ans)
         else:
-            self.Ui.Result_text.setText('加密失败！')
+            self.Ui.Result_text.setPlainText('加密失败！')
 
 
     #decrypt
@@ -732,9 +763,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         try:
             result_text=''
             # print(decrypt_type)
-            text = self.Ui.Source_text.toPlainText()
+            text = self.Ui.Source_text.toPlainText().strip()
             if text=='':
-                self.Ui.Result_text.setText('请输入一个源字符串！')
+                self.Ui.Result_text.setPlainText('请输入一个源字符串！')
                 return 0
             if decrypt_type == 'Rot13':
                 PAIRS= {
@@ -874,11 +905,11 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     else:
                         result_text = result_text + ' '
             if result_text!="":
-                self.Ui.Result_text.setText(result_text)
+                self.Ui.Result_text.setPlainText(result_text)
             else:
-                self.Ui.Result_text.setText('解密失败！')
+                self.Ui.Result_text.setPlainText('解密失败！')
         except Exception as e :
-            self.Ui.Result_text.setText(str(e)) 
+            self.Ui.Result_text.setPlainText(str(e))
             # QMessageBox.critical(self,'Error',str(e))
             pass
             # print(str(e))
@@ -887,10 +918,10 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             self.dialog.close()
             letter_list = string.ascii_uppercase
             letter_list2 = string.ascii_lowercase
-            message = self.Ui.Source_text.toPlainText()
+            message = self.Ui.Source_text.toPlainText().strip()
             key = self.WChild.key.text()
             if len(key)==0:
-                self.Ui.Result_text.setText(str('请输入一个合法的key！')) 
+                self.Ui.Result_text.setPlainText(str('请输入一个合法的key！'))
                 return 0
             key_list = []
             for i in key:
@@ -910,16 +941,16 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 else:
                     plaintext += cipher
             if plaintext!='':
-                self.Ui.Result_text.setText(plaintext)
+                self.Ui.Result_text.setPlainText(plaintext)
             else:
-                self.Ui.Result_text.setText('解密失败!')
+                self.Ui.Result_text.setPlainText('解密失败!')
         except Exception as e:
-            self.Ui.Result_text.setText(str(e)) 
+            self.Ui.Result_text.setPlainText(str(e))
     def sifang_decrypt(self):
         self.dialog.close()
         try:
             # print(1)
-            text = (self.Ui.Source_text.toPlainText()).upper()
+            text = (self.Ui.Source_text.toPlainText().strip()).upper()
             key1 = self.WChild.Key1.text().upper()
             key2 = self.WChild.Key2.text().upper()
             matrix = "ABCDEFGHIJKLMNOPRSTUVWXYZ"
@@ -955,9 +986,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 return_pla += pla_list[second[0]][first[1]]
                 result += return_pla
             if result != '':
-                self.Ui.Result_text.setText(result)
+                self.Ui.Result_text.setPlainText(result)
             else:
-                self.Ui.Result_text.setText('解密失败！')
+                self.Ui.Result_text.setPlainText('解密失败！')
 
         except Exception as e:
             # print(str(e))
@@ -976,7 +1007,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             key2 = self.WChild.Key2.text()
             try:
                 if (0 == int(key1.isdigit()) or 0 == int(key2.isdigit())):
-                    self.Ui.Result_text.setText('输入有误! 密钥为数字。')
+                    self.Ui.Result_text.setPlainText('输入有误! 密钥为数字。')
                     return
                 if (self.gcd(int(key1),26)!=1):
                     key1_list = []
@@ -986,19 +1017,19 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                             key1_list.append(i)
                     for z in key1_list:
                         result+= 'key1:%s'%z+'   明文:'+self.fangshe_getdecrypt(int(z), int(key2))+'\n'
-                    self.Ui.Result_text.setText('输入有误! key1和26必须互素。以下为爆破key1的结果\n'+result)
+                    self.Ui.Result_text.setPlainText('输入有误! key1和26必须互素。以下为爆破key1的结果\n'+result)
                     return 0
             except:
-                self.Ui.Result_text.setText('输入有误!')
+                self.Ui.Result_text.setPlainText('输入有误!')
             else:
-                self.Ui.Result_text.setText(self.fangshe_getdecrypt(int(key1),int(key2)))
+                self.Ui.Result_text.setPlainText(self.fangshe_getdecrypt(int(key1),int(key2)))
         except Exception as e:
-            self.Ui.Result_text.setText('解密失败。')
+            self.Ui.Result_text.setPlainText('解密失败。')
             # print(str(e))
             pass
     def fangshe_getdecrypt(self,key1,key2):
         try:
-            text = (self.Ui.Source_text.toPlainText())
+            text = (self.Ui.Source_text.toPlainText().strip())
             letter_list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"  # 字母表
             plaintext = ""
             for ch in text:  # 遍历密文
@@ -1030,9 +1061,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
     def Binary(self,Binary_type):
         try:
             result_text=''
-            text = self.Ui.Source_text.toPlainText()
+            text = self.Ui.Source_text.toPlainText().strip()
             if text == '':
-                self.Ui.Result_text.setText('请输入一个源字符串！')
+                self.Ui.Result_text.setPlainText('请输入一个源字符串！')
                 return 0
             all_text = text.split(" ")
             all_result = ''
@@ -1082,16 +1113,16 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                     return 0
                 all_result=all_result+result_text+' '
             all_result=str(all_result).replace('0o','').replace('0x','').replace('0b','')
-            self.Ui.Result_text.setText(all_result)
+            self.Ui.Result_text.setPlainText(all_result)
         except Exception as e :
-            self.Ui.Result_text.setText(str(e)) 
+            self.Ui.Result_text.setPlainText(str(e))
             pass
     def Binary_conversion(self):
         try:
             return_Data = ''
             self.dialog.close()
             if self.Binary_dialog.Source.text()!='' and self.Binary_dialog.result.text()!='':
-                text = self.Ui.Source_text.toPlainText()
+                text = self.Ui.Source_text.toPlainText().strip()
                 # print(text)
                 from_ = int(self.Binary_dialog.Source.text())
                 to_ = int(self.Binary_dialog.result.text())
@@ -1111,13 +1142,13 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 b.reverse()
                 for i in b:
                     return_Data+=str(a[i])
-                self.Ui.Result_text.setText(return_Data)
+                self.Ui.Result_text.setPlainText(return_Data)
         except Exception as e :
             pass
     def Copy_text(self,text):
         try:
             if  text=='Source':
-                data = self.Ui.Source_text.toPlainText()
+                data = self.Ui.Source_text.toPlainText().strip()
             if  text=='result':
                 data = self.Ui.Result_text.toPlainText()
             # 访问剪切板，存入值
@@ -1130,19 +1161,19 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
     def tihuan(self,text):
         try:
             if  text=='Source':
-                data = self.Ui.Source_text.toPlainText()
+                data = self.Ui.Source_text.toPlainText().strip()
                 source_text = self.Ui.Source_tihuan_source.text()
                 result_text = self.Ui.Source_tihuan_result.text()
-                text = self.Ui.Source_text.toPlainText()
+                text = self.Ui.Source_text.toPlainText().strip()
                 text = text.replace(source_text, result_text)
-                self.Ui.Source_text.setText(str(text))
+                self.Ui.Source_text.setPlainText(str(text))
             if  text=='result':
                 data = self.Ui.Result_text.toPlainText()
                 source_text = self.Ui.Result_tihuan_source.text()
                 result_text = self.Ui.Result_tihuan_result.text()
                 text = self.Ui.Result_text.toPlainText()
                 text = text.replace(source_text, result_text)
-                self.Ui.Result_text.setText(str(text))
+                self.Ui.Result_text.setPlainText(str(text))
         except Exception as e :
             pass
     def paste(self,text):
@@ -1152,13 +1183,13 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             wincld.CloseClipboard()
             if  text=='Source':
                 # print(text)
-                source_text = self.Ui.Source_text.toPlainText() #
+                source_text = self.Ui.Source_text.toPlainText().strip() #
                 data=source_text+data
-                self.Ui.Source_text.setText(data)
+                self.Ui.Source_text.setPlainText(data)
             if  text=='result':
                 result_text = self.Ui.Result_text.toPlainText() #
                 data=result_text+data
-                self.Ui.Result_text.setText(data)
+                self.Ui.Result_text.setPlainText(data)
         except Exception as e :
             # print(str(e))
             pass
@@ -1183,6 +1214,17 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         fileName, filetype = QFileDialog.getSaveFileName(self, (r"保存文件"), (r'C:\Users\Administrator\\' + filename),
                                                          r"All files(*.*)")
         return fileName
+
+    def closeEvent(self, event):
+        """
+        重写closeEvent方法，实现dialog窗体关闭时执行一些代码
+        :param event: close()触发的事件
+        :return: None
+        """
+        try:
+            config_setup.write(open('config.ini', "r+", encoding="utf-8"))  # r+模式
+        except:
+            QMessageBox.critical(self, 'False', "配置文件保存失败!")
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindows()
