@@ -11,8 +11,8 @@ if hasattr(sys, 'frozen'):
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-import win32con,json
-import win32clipboard as wincld
+import pyperclip
+import json
 from GUI.main import Ui_MainWindow
 from GUI.KEY_1 import Ui_KEY1
 from GUI.Binary import Ui_Binary
@@ -20,8 +20,8 @@ from GUI.KEY_2 import Ui_KEY2
 import frozen_dir
 SETUP_DIR = frozen_dir.app_path()
 sys.path.append(SETUP_DIR)
-version = '1.2.8'
-update_time = '20210619'
+version = '1.2.9'
+update_time = '20210927'
 class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
     def __init__(self,parent=None):
         super(MainWindows,self).__init__(parent)
@@ -76,6 +76,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.actionRot13_encrypt.triggered.connect(lambda:self.encrypt(self.Ui.actionRot13_encrypt.text()))
         self.Ui.action_kaisa_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_kaisa_encrypt.text()))
         self.Ui.action_zhalan_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_zhalan_encrypt.text()))
+        self.Ui.action_zhalan_w_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_zhalan_w_encrypt.text()))
         self.Ui.action_peigen_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_peigen_encrypt.text()))
         self.Ui.action_mosi_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_mosi_encrypt.text()))
         self.Ui.action_yunying_encrypt.triggered.connect(lambda: self.encrypt(self.Ui.action_yunying_encrypt.text()))
@@ -89,6 +90,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         self.Ui.actionRot13_decrypt.triggered.connect(lambda:self.decrypt(self.Ui.actionRot13_decrypt.text()))
         self.Ui.action_kaisa_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_kaisa_decrypt.text()))
         self.Ui.action_zhalan_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_zhalan_decrypt.text()))
+        self.Ui.action_zhalan_w_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_zhalan_w_decrypt.text()))
         self.Ui.action_peihen_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_peihen_decrypt.text()))
         self.Ui.action_mosi_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_mosi_decrypt.text()))
         self.Ui.action_yiwei_decrypt.triggered.connect(lambda: self.decrypt(self.Ui.action_yiwei_decrypt.text()))
@@ -215,11 +217,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
 
     def show_json(self,q):
         # print(q.text())
-        wincld.OpenClipboard()
-        wincld.EmptyClipboard()
-        wincld.SetClipboardData(win32con.CF_UNICODETEXT, q.text())
-        wincld.CloseClipboard()
-        reply = QMessageBox.question(self, 'Message', "链接已复制到剪切板，是否在浏览器中打开链接?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        pyperclip.copy(q.text())
+        reply = QMessageBox.question(self, 'Message', "链接已复制到剪切板，是否在浏览器中打开链接?", QMessageBox.Yes | QMessageBox.No,
+                                     QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             webbrowser.open(q.text())
         else:
@@ -248,6 +248,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         except Exception as e :
             QMessageBox.critical(self,'Error',str(e))
             pass
+
 
     #编码
     def encode(self,encode_type):
@@ -427,7 +428,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 result_text = ''
                 for i in range(0, len(text)):
                     if text[i] != ' ':
-                        result_text = result_text + letter.get(text[i])
+                            result_text = result_text + letter.get(text[i])
                     else:
                         result_text = result_text + ' '
             elif decode_type == 'Base64->图片':
@@ -490,8 +491,19 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.WChild_zhalan = Ui_KEY1()
                 self.dialog = QtWidgets.QDialog(self)
                 self.WChild_zhalan.setupUi(self.dialog)
+                self.dialog.setWindowTitle(encrypt_type)
+                self.WChild_zhalan.label.setText("请输入栏数：")
                 self.dialog.show()
                 self.WChild_zhalan.keyenter.clicked.connect(self.zhalanEncrypto)
+                return 0
+            elif encrypt_type=='栅栏密码(W型)':
+                self.WChild_zhalan = Ui_KEY1()
+                self.dialog = QtWidgets.QDialog(self)
+                self.WChild_zhalan.setupUi(self.dialog)
+                self.dialog.setWindowTitle(encrypt_type)
+                self.WChild_zhalan.label.setText("请输入栏数：")
+                self.dialog.show()
+                self.WChild_zhalan.keyenter.clicked.connect(self.zhalan_w_Encrypto)
                 return 0
             elif encrypt_type=='培根密码':
                 CODE_TABLE = {  # 培根字典
@@ -563,6 +575,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.WChild = Ui_KEY2()
                 self.dialog = QtWidgets.QDialog(self)
                 self.WChild.setupUi(self.dialog)
+                self.dialog.setWindowTitle(encrypt_type)
+                self.WChild.key_1.setText("Key square 1：")
+                self.WChild.keyl_2.setText("Key square 2：")
                 self.dialog.show()
                 self.WChild.enter.clicked.connect(self.sifang_encrypt)
                 return
@@ -581,6 +596,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.WChild = Ui_KEY2()
                 self.dialog = QtWidgets.QDialog(self)
                 self.WChild.setupUi(self.dialog)
+                self.dialog.setWindowTitle(encrypt_type)
+                self.WChild.key_1.setText("a：")
+                self.WChild.keyl_2.setText("b：")
                 self.dialog.show()
                 self.WChild.enter.clicked.connect(self.fangshe_encrypt)
                 return
@@ -589,6 +607,8 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.WChild = Ui_KEY1()
                 self.dialog = QtWidgets.QDialog(self)
                 self.WChild.setupUi(self.dialog)
+                self.dialog.setWindowTitle(encrypt_type)
+                self.WChild.label.setText("Keyword：")
                 self.dialog.show()
                 self.WChild.keyenter.clicked.connect(self.VigenereEncrypto)
                 return 0
@@ -613,6 +633,33 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             # QMessageBox.critical(self,'Error',str(e))
             # print(str(e))
             pass
+
+    def zhalan_w_encode(self,string, n):
+        '''加密'''
+        array = self.generate_w(string, n)
+        msg = []
+        for row in range(n):  # 将每行的字符连起来
+            for col in range(len(string)):
+                if array[row][col] != '.':
+                    msg.append(array[row][col])
+        return array, msg
+
+    def generate_w(self,string, n):
+        '''将字符排列成w型'''
+        array = [['.'] * len(string) for i in range(n)]  # 生成初始矩阵
+        row = 0
+        upflag = False
+        for col in range(len(string)):  # 在矩阵上按w型画出string
+            array[row][col] = string[col]
+            if row == n - 1:
+                upflag = True
+            if row == 0:
+                upflag = False
+            if upflag:
+                row -= 1
+            else:
+                row += 1
+        return array
     def VigenereEncrypto(self):
         try:
             self.dialog.close()
@@ -738,6 +785,18 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             for j in range(len(pla_list[i])):
                 if pla_list[i][j] == x:
                     return i, j
+    def zhalan_w_Encrypto(self):
+        self.dialog.close()
+        plain = self.Ui.Source_text.toPlainText().strip()
+        try:
+            array,msg  =  self.zhalan_w_encode(plain,int(self.WChild_zhalan.key.text()))
+        except Exception as e:
+            self.Ui.Result_text.setPlainText(str(e))
+            return
+        self.Ui.Result_text.setPlainText(''.join(msg))
+        # for i in array: print(i)
+        # print(''.join(msg))
+
     def zhalanEncrypto(self):
         self.dialog.close()
         plain = self.Ui.Source_text.toPlainText().strip()
@@ -756,8 +815,6 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             self.Ui.Result_text.setPlainText(ans)
         else:
             self.Ui.Result_text.setPlainText('加密失败！')
-
-
     #decrypt
     def decrypt(self,decrypt_type):
         try:
@@ -793,20 +850,24 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                         t += c
                 result_text=t
             elif decrypt_type == '栅栏密码':
-                for n in range(2, text.__len__() - 1):
-                    ans = ''
-                    for i in range(n):
-                        for j in range(int(text.__len__() / n + 0.5)):
-                            try:
-                                ans += text[j * n + i]
-                            except:
-                                pass
-                    result_text+="分为%s栏，解密结果为:%s\n"%(n,ans)
+                factors = [fac for fac in range(2, len(text)) if len(text) % fac == 0]  # 取得密文长度的所有因数
+                for fac in factors:
+                    flag = ''
+                    for i in range(fac):  # 按一定的步长取几组字符，并连接起来，这里组数就等于步长数
+                        flag += text[i::fac]
+                    result_text+="分为%s栏，解密结果为:%s\n"%(fac,flag)
+            elif decrypt_type == '栅栏密码(W型)':
+                for n in range(2, len(text)):  # 遍历所有可能的栏数
+                    # print(str(n) + '栏：' + ''.join(self.zhanlan_w_decode(text, n)[1]))
+                    result_text+="分为%s栏，解密结果为:%s\n"%(str(n),''.join(self.zhanlan_w_decode(text, n)[1]))
             elif decrypt_type == '培根密码':
-                return_str=''
-                dicts = {'aabbb': 'H', 'aabba': 'G', 'baaab': 'R', 'baaaa': 'Q', 'bbaab': 'Z', 'bbaaa': 'Y', 'abbab': 'N',
-                         'abbaa': 'M', 'babaa': 'U', 'babab': 'V', 'abaaa': 'I', 'abaab': 'J', 'aabab': 'F', 'aabaa': 'E',
-                         'aaaaa': 'A', 'aaaab': 'B', 'baabb': 'T', 'baaba': 'S', 'aaaba': 'C', 'aaabb': 'D', 'abbbb': 'P',
+                return_str = ''
+                dicts = {'aabbb': 'H', 'aabba': 'G', 'baaab': 'R', 'baaaa': 'Q', 'bbaab': 'Z', 'bbaaa': 'Y',
+                         'abbab': 'N',
+                         'abbaa': 'M', 'babaa': 'U', 'babab': 'V', 'abaaa': 'I', 'abaab': 'J', 'aabab': 'F',
+                         'aabaa': 'E',
+                         'aaaaa': 'A', 'aaaab': 'B', 'baabb': 'T', 'baaba': 'S', 'aaaba': 'C', 'aaabb': 'D',
+                         'abbbb': 'P',
                          'abbba': 'O', 'ababa': 'K', 'ababb': 'L', 'babba': 'W', 'babbb': 'X'}
                 sums = len(text)
                 j = 5  ##每5个为一组
@@ -877,6 +938,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.WChild = Ui_KEY2()
                 self.dialog = QtWidgets.QDialog(self)
                 self.WChild.setupUi(self.dialog)
+                self.dialog.setWindowTitle(decrypt_type)
+                self.WChild.key_1.setText("Key square 1：")
+                self.WChild.keyl_2.setText("Key square 2：")
                 self.dialog.show()
                 self.WChild.enter.clicked.connect(self.sifang_decrypt)
                 return 0
@@ -884,6 +948,9 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.WChild = Ui_KEY2()
                 self.dialog = QtWidgets.QDialog(self)
                 self.WChild.setupUi(self.dialog)
+                self.dialog.setWindowTitle(decrypt_type)
+                self.WChild.key_1.setText("a：")
+                self.WChild.keyl_2.setText("b：")
                 self.dialog.show()
                 self.WChild.enter.clicked.connect(self.fangshe_decrypt)
                 return 0
@@ -892,6 +959,8 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.WChild = Ui_KEY1()
                 self.dialog = QtWidgets.QDialog(self)
                 self.WChild.setupUi(self.dialog)
+                self.dialog.setWindowTitle(decrypt_type)
+                self.WChild_zhalan.label.setText("Keyword：")
                 self.dialog.show()
                 self.WChild.keyenter.clicked.connect(self.VigenereDecrypto)
                 return 0
@@ -1107,6 +1176,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 elif Binary_type == '自定义':
                     self.Binary_dialog = Ui_Binary()
                     self.dialog = QtWidgets.QDialog(self)
+                    self.dialog.setWindowTitle(Binary_type)
                     self.Binary_dialog.setupUi(self.dialog)
                     self.dialog.show()
                     self.Binary_dialog.enter.clicked.connect(self.Binary_conversion)
@@ -1152,10 +1222,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             if  text=='result':
                 data = self.Ui.Result_text.toPlainText()
             # 访问剪切板，存入值
-            wincld.OpenClipboard()
-            wincld.EmptyClipboard()
-            wincld.SetClipboardData(win32con.CF_UNICODETEXT, data)
-            wincld.CloseClipboard()
+            pyperclip.copy(data)
         except Exception as e :
             pass
     def tihuan(self,text):
@@ -1176,11 +1243,26 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.Ui.Result_text.setPlainText(str(text))
         except Exception as e :
             pass
+
+    def zhanlan_w_decode(self,string, n):
+        '''解密'''
+        array = self.generate_w(string, n)
+        sub = 0
+        for row in range(n):  # 将w型字符按行的顺序依次替换为string
+            for col in range(len(string)):
+                if array[row][col] != '.':
+                    array[row][col] = string[sub]
+                    sub += 1
+        msg = []
+        for col in range(len(string)):  # 以列的顺序依次连接各字符
+            for row in range(n):
+                if array[row][col] != '.':
+                    msg.append(array[row][col])
+        return array, msg
+
     def paste(self,text):
         try:
-            wincld.OpenClipboard()
-            data = wincld.GetClipboardData(win32con.CF_UNICODETEXT)
-            wincld.CloseClipboard()
+            data = pyperclip.paste()
             if  text=='Source':
                 # print(text)
                 source_text = self.Ui.Source_text.toPlainText().strip() #
