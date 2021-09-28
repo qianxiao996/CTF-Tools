@@ -20,8 +20,8 @@ from GUI.KEY_2 import Ui_KEY2
 import frozen_dir
 SETUP_DIR = frozen_dir.app_path()
 sys.path.append(SETUP_DIR)
-version = '1.2.9'
-update_time = '20210927'
+version = '1.3.0'
+update_time = '20210928'
 class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
     def __init__(self,parent=None):
         super(MainWindows,self).__init__(parent)
@@ -960,7 +960,7 @@ class MainWindows(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.dialog = QtWidgets.QDialog(self)
                 self.WChild.setupUi(self.dialog)
                 self.dialog.setWindowTitle(decrypt_type)
-                self.WChild_zhalan.label.setText("Keyword：")
+                self.WChild.label.setText("Keyword：")
                 self.dialog.show()
                 self.WChild.keyenter.clicked.connect(self.VigenereDecrypto)
                 return 0
