@@ -1,3 +1,11 @@
 requests==2.26.0
 pyperclip==1.8.2
 PyQt5==5.15.4
+js2py
+base36
+base58
+base91
+py3base92
+base62
+collections
+random

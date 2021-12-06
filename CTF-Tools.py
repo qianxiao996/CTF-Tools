@@ -1,13 +1,13 @@
+#coding=utf-8
 import binascii
 import html, base64, sys, string, os, urllib.parse, random, collections, re, base36,base58, base91, py3base92,base62
 import importlib.machinery
 import webbrowser
-
 import configparser
-
+import execjs
 import Crypto.Util.Counter
-import requests
-from PyQt5.QtCore import QTranslator
+import requests,js2py
+from PyQt5.QtCore import QTranslator, QCoreApplication, QEvent
 
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
@@ -23,11 +23,10 @@ from GUI.KEY_2 import Ui_KEY2
 from GUI.Xiandaimima import Ui_Form_Xiandaimima
 import frozen_dir
 from Crypto.Cipher import AES
-
 SETUP_DIR = frozen_dir.app_path()
 sys.path.append(SETUP_DIR)
-version = '1.3.2'
-update_time = '20211128'
+version = '1.3.3'
+update_time = '20211206'
 
 
 class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -55,7 +54,10 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Ui.actionEscape_U_encode.triggered.connect(lambda: self.encode(self.Ui.actionEscape_U_encode.objectName()))
         self.Ui.actionHtmlEncode_encode.triggered.connect(
             lambda: self.encode(self.Ui.actionHtmlEncode_encode.objectName()))
-        self.Ui.actionASCII_encode.triggered.connect(lambda: self.encode(self.Ui.actionASCII_encode.objectName()))
+        self.Ui.actionASCII_2_encode.triggered.connect(lambda: self.encode(self.Ui.actionASCII_2_encode.objectName()))
+        self.Ui.actionASCII_8_encode.triggered.connect(lambda: self.encode(self.Ui.actionASCII_8_encode.objectName()))
+        self.Ui.actionASCII_10_encode.triggered.connect(lambda: self.encode(self.Ui.actionASCII_10_encode.objectName()))
+        self.Ui.actionASCII_16_encode.triggered.connect(lambda: self.encode(self.Ui.actionASCII_16_encode.objectName()))
         self.Ui.actionBase16_encode.triggered.connect(lambda: self.encode(self.Ui.actionBase16_encode.objectName()))
         self.Ui.actionBase32_encode.triggered.connect(lambda: self.encode(self.Ui.actionBase32_encode.objectName()))
         self.Ui.actionBase36_encode.triggered.connect(lambda: self.encode(self.Ui.actionBase36_encode.objectName()))
@@ -73,6 +75,13 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Ui.actionQwerty_encode.triggered.connect(lambda: self.encode(self.Ui.actionQwerty_encode.objectName()))
         self.Ui.actiontupian_base64_encode.triggered.connect(
             lambda: self.encode(self.Ui.actiontupian_base64_encode.objectName()))
+
+        self.Ui.actionJsFuck_encode.triggered.connect(
+            lambda: self.encode(self.Ui.actionJsFuck_encode.objectName()))
+        self.Ui.actionJJEncode_encode.triggered.connect(
+            lambda: self.encode(self.Ui.actionJJEncode_encode.objectName()))
+        self.Ui.actionAAEncode_encode.triggered.connect(
+            lambda: self.encode(self.Ui.actionAAEncode_encode.objectName()))
         self.Ui.actiontupian_hex_encode.triggered.connect(
             lambda: self.encode(self.Ui.actiontupian_hex_encode.objectName()))
         # decode
@@ -83,7 +92,14 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Ui.actionEscape_U_decode.triggered.connect(lambda: self.decode(self.Ui.actionEscape_U_decode.objectName()))
         self.Ui.actionHtmlEncode_decode.triggered.connect(
             lambda: self.decode(self.Ui.actionHtmlEncode_decode.objectName()))
-        self.Ui.actionASCII_decode.triggered.connect(lambda: self.decode(self.Ui.actionASCII_decode.objectName()))
+        self.Ui.actionASCII_2_decode.triggered.connect(lambda: self.decode(self.Ui.actionASCII_2_decode.objectName()))
+        self.Ui.actionASCII_8_decode.triggered.connect(lambda: self.decode(self.Ui.actionASCII_8_decode.objectName()))
+        self.Ui.actionASCII_10_decode.triggered.connect(lambda: self.decode(self.Ui.actionASCII_10_decode.objectName()))
+        self.Ui.actionASCII_16_decode.triggered.connect(lambda: self.decode(self.Ui.actionASCII_16_decode.objectName()))
+        self.Ui.actionJsFuck_decode.triggered.connect(lambda: self.decode(self.Ui.actionJsFuck_decode.objectName()))
+        self.Ui.actionJJEncode_decode.triggered.connect(lambda: self.decode(self.Ui.actionJJEncode_decode.objectName()))
+        self.Ui.actionAAEncode_decode.triggered.connect(lambda: self.decode(self.Ui.actionAAEncode_decode.objectName()))
+
         self.Ui.actionBase16_decode.triggered.connect(lambda: self.decode(self.Ui.actionBase16_decode.objectName()))
         self.Ui.actionBase32_decode.triggered.connect(lambda: self.decode(self.Ui.actionBase32_decode.objectName()))
         self.Ui.actionBase36_decode.triggered.connect(lambda: self.decode(self.Ui.actionBase36_decode.objectName()))
@@ -185,6 +201,11 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Ui.action_str_daxie.triggered.connect(lambda:self.Ui.Result_text.setPlainText(self.Ui.Source_text.toPlainText().upper()))  # 字符串全小写
 
 
+        self.Ui.tab_add.clicked.connect(self.add_Tab)  #添加tab
+        self.Ui.tabWidget.tabCloseRequested.connect(self.closeTab)
+        self.Ui.tabWidget.currentChanged.connect(self.onCurrentChanged)
+        self.Ui.tabWidget.tabBar().installEventFilter(self)
+        self.Ui.tabWidget.tabBar().previousMiddleIndex = -1
 
         self.readfile()
         # Website
@@ -192,9 +213,9 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         Website = websitemenubar.addMenu("在线工具")
         for i in json_data:
             impMenu = QMenu(i, self)
-            url_list = json_data[i].split('\n')
-            for j in url_list:
-                sub_action = QAction(QIcon(''), j, self)
+            url_list = json_data[i]
+            for key in url_list.keys():
+                sub_action = QAction(QIcon(''), key, self)
                 impMenu.addAction(sub_action)
             Website.addMenu(impMenu)
         Website.triggered[QAction].connect(self.show_json)
@@ -231,7 +252,7 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
             self.out_result("Unicode:\n" + self.actionUnicode_decode(text))
             self.out_result("Escape(%U):\n" + self.actionEscape_U_decode(text))
             self.out_result("HtmlEncode:\n" + self.actionHtmlEncode_decode(text))
-            self.out_result("ASCII:\n" + self.actionASCII_decode(text))
+            self.out_result("ASCII(10):\n" + self.actionASCII_10_decode(text))
             self.out_result("Shellcode:\n" + self.actionShellcode_decode(text))
             self.out_result("Qwerty:\n" + self.actionQwerty_decode(text))
             self.out_result("Hex->Str:\n" + self.actionHex_Str_decode(text))
@@ -360,13 +381,54 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
             pass
 
     def show_json(self, q):
-        # print(q.text())
-        pyperclip.copy(q.text())
-        reply = QMessageBox.question(self, 'Message', "链接已复制到剪切板，是否在浏览器中打开链接?", QMessageBox.Yes | QMessageBox.No,
-                                     QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
-            webbrowser.open(q.text())
-        else:
+        try:
+            othersmenubar = self.menuBar()  # 获取窗体的菜单栏
+            #
+            # print(i[1].menu().actions()[4].text())
+            for i in othersmenubar.actions():
+                # print(i.text())
+                if i.text() == "在线工具":
+                    # sub_action = i()
+                    for j in i.menu().actions():
+                        # print(j.text())
+                        # 输出为关于软件、检查更新、意见反馈、皮肤风格
+                        for k in j.menu().actions():
+                            # print(k.text())
+                            if k ==q:
+                                # print(j.text()+'|'+q.text())
+                                if 'http://' in json_data[j.text()][q.text()] or  'https://' in json_data[j.text()][q.text()] :
+                                    # print(q.text())
+                                    pyperclip.copy(json_data[j.text()][q.text()])
+                                    reply = QMessageBox.question(self, 'Message', "链接已复制到剪切板，是否在浏览器中打开链接?",
+                                                                 QMessageBox.Yes | QMessageBox.No,
+                                                                 QMessageBox.Yes)
+
+                                    if reply == QMessageBox.Yes:
+                                        webbrowser.open(json_data[j.text()][q.text()])
+                                    else:
+                                        pass
+                                elif os.path.isfile(json_data[j.text()][q.text()]):
+                                    dialog_fault = QDialog(self)
+                                    lb = QLabel(dialog_fault)
+                                    dialog_fault.setWindowTitle(q.text())
+                                    # url_father = os.path.dirname(os.path.abspath(__file__))
+                                    # image_path = url_father + "/fault_information.png"
+                                    pic = QPixmap(json_data[j.text()][q.text()])
+                                    lb.resize(pic.width(), pic.height())
+                                    lb.setPixmap(pic.scaled(lb.size(),QtCore.Qt.IgnoreAspectRatio))
+                                    # label_pic.setGeometry(10, 10, 1019, 537)
+                                    dialog_fault.show()
+
+                                else:
+                                    pyperclip.copy(json_data[j.text()][q.text()])
+                                    QMessageBox.information(self, 'Success', '链接已复制到剪切板')
+
+                                return
+                        #     else:
+                        #         pass
+                    # return
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', '程序报错:'+str(e))
             pass
 
     def readfile(self):
@@ -465,13 +527,36 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
     def actionHtmlEncode_encode(self, text):
         result_text = html.escape(text)
         return result_text
-
-    def actionASCII_encode(self, text):
+    def actionASCII_2_encode(self, text):
+        result = ''
+        for i in text:
+            s = int(ord(str(i)))
+            re = str(bin(s)).replace('0b','')
+            result  += str(re) + ' '
+        result_text = str(result)
+        return result_text.strip()
+    def actionASCII_8_encode(self, text):
+        result = ''
+        for i in text:
+            s = int(ord(str(i)))
+            re = str(oct(s)).replace('0o','')
+            result  += str(re) + ' '
+        result_text = str(result)
+        return result_text.strip()
+    def actionASCII_10_encode(self, text):
         result = ''
         for i in text:
             result = str(result) + str(ord(str(i))) + ' '
-        result_text = str(result)[:-1]
-        return result_text
+        result_text = str(result)
+        return result_text.strip()
+    def actionASCII_16_encode(self, text):
+        result = ''
+        for i in text:
+            s = int(ord(str(i)))
+            re = str(hex(s)).replace('0x','')
+            result  += str(re) + ' '
+        result_text = str(result)
+        return result_text.strip()
 
     def actionBase16_encode(self, text):
         text = text.lower()
@@ -574,6 +659,498 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
                 result_text = 'Qwerty只能对字母加密!'
         return result_text
         # print(str(e))
+    def actionJsFuck_encode(self,text):
+
+        ctx = execjs.compile("""
+/*! JSFuck 0.4.0 - http://jsfuck.com */
+
+function JSFuck(code){
+
+    var USE_CHAR_CODE = "USE_CHAR_CODE";
+  
+    var MIN = 32, MAX = 126;
+  
+    var SIMPLE = {
+      'false':      '![]',
+      'true':       '!![]',
+      'undefined':  '[][[]]',
+      'NaN':        '+[![]]',
+      'Infinity':   '+(+!+[]+(!+[]+[])[!+[]+!+[]+!+[]]+[+!+[]]+[+[]]+[+[]]+[+[]])' // +"1e1000"
+    };
+  
+    var CONSTRUCTORS = {
+      'Array':    '[]',
+      'Number':   '(+[])',
+      'String':   '([]+[])',
+      'Boolean':  '(![])',
+      'Function': '[]["fill"]',
+      'RegExp':   'Function("return/"+false+"/")()'
+    };
+  
+    var MAPPING = {
+      'a':   '(false+"")[1]',
+      'b':   '([]["entries"]()+"")[2]',
+      'c':   '([]["fill"]+"")[3]',
+      'd':   '(undefined+"")[2]',
+      'e':   '(true+"")[3]',
+      'f':   '(false+"")[0]',
+      'g':   '(false+[0]+String)[20]',
+      'h':   '(+(101))["to"+String["name"]](21)[1]',
+      'i':   '([false]+undefined)[10]',
+      'j':   '([]["entries"]()+"")[3]',
+      'k':   '(+(20))["to"+String["name"]](21)',
+      'l':   '(false+"")[2]',
+      'm':   '(Number+"")[11]',
+      'n':   '(undefined+"")[1]',
+      'o':   '(true+[]["fill"])[10]',
+      'p':   '(+(211))["to"+String["name"]](31)[1]',
+      'q':   '(+(212))["to"+String["name"]](31)[1]',
+      'r':   '(true+"")[1]',
+      's':   '(false+"")[3]',
+      't':   '(true+"")[0]',
+      'u':   '(undefined+"")[0]',
+      'v':   '(+(31))["to"+String["name"]](32)',
+      'w':   '(+(32))["to"+String["name"]](33)',
+      'x':   '(+(101))["to"+String["name"]](34)[1]',
+      'y':   '(NaN+[Infinity])[10]',
+      'z':   '(+(35))["to"+String["name"]](36)',
+  
+      'A':   '(+[]+Array)[10]',
+      'B':   '(+[]+Boolean)[10]',
+      'C':   'Function("return escape")()(("")["italics"]())[2]',
+      'D':   'Function("return escape")()([]["fill"])["slice"]("-1")',
+      'E':   '(RegExp+"")[12]',
+      'F':   '(+[]+Function)[10]',
+      'G':   '(false+Function("return Date")()())[30]',
+      'H':   USE_CHAR_CODE,
+      'I':   '(Infinity+"")[0]',
+      'J':   USE_CHAR_CODE,
+      'K':   USE_CHAR_CODE,
+      'L':   USE_CHAR_CODE,
+      'M':   '(true+Function("return Date")()())[30]',
+      'N':   '(NaN+"")[0]',
+      'O':   '(NaN+Function("return{}")())[11]',
+      'P':   USE_CHAR_CODE,
+      'Q':   USE_CHAR_CODE,
+      'R':   '(+[]+RegExp)[10]',
+      'S':   '(+[]+String)[10]',
+      'T':   '(NaN+Function("return Date")()())[30]',
+      'U':   '(NaN+Function("return{}")()["to"+String["name"]]["call"]())[11]',
+      'V':   USE_CHAR_CODE,
+      'W':   USE_CHAR_CODE,
+      'X':   USE_CHAR_CODE,
+      'Y':   USE_CHAR_CODE,
+      'Z':   USE_CHAR_CODE,
+  
+      ' ':   '(NaN+[]["fill"])[11]',
+      '!':   USE_CHAR_CODE,
+      '"':   '("")["fontcolor"]()[12]',
+      '#':   USE_CHAR_CODE,
+      '$':   USE_CHAR_CODE,
+      '%':   'Function("return escape")()([]["fill"])[21]',
+      '&':   '("")["link"](0+")[10]',
+      '\\'':  USE_CHAR_CODE,
+      '(':   '(undefined+[]["fill"])[22]',
+      ')':   '([0]+false+[]["fill"])[20]',
+      '*':   USE_CHAR_CODE,
+      '+':   '(+(+!+[]+(!+[]+[])[!+[]+!+[]+!+[]]+[+!+[]]+[+[]]+[+[]])+[])[2]',
+      ',':   '([]["slice"]["call"](false+"")+"")[1]',
+      '-':   '(+(.+[0000000001])+"")[2]',
+      '.':   '(+(+!+[]+[+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+[!+[]+!+[]]+[+[]])+[])[+!+[]]',
+      '/':   '(false+[0])["italics"]()[10]',
+      ':':   '(RegExp()+"")[3]',
+      ';':   '("")["link"](")[14]',
+      '<':   '("")["italics"]()[0]',
+      '=':   '("")["fontcolor"]()[11]',
+      '>':   '("")["italics"]()[2]',
+      '?':   '(RegExp()+"")[2]',
+      '@':   USE_CHAR_CODE,
+      '[':   '([]["entries"]()+"")[0]',
+      '\\\\':  USE_CHAR_CODE,
+      ']':   '([]["entries"]()+"")[22]',
+      '^':   USE_CHAR_CODE,
+      '_':   USE_CHAR_CODE,
+      '`':   USE_CHAR_CODE,
+      '{':   '(true+[]["fill"])[20]',
+      '|':   USE_CHAR_CODE,
+      '}':   '([]["fill"]+"")["slice"]("-1")',
+      '~':   USE_CHAR_CODE
+    };
+  
+    var GLOBAL = 'Function("return this")()';
+  
+    function fillMissingChars(){
+      for (var key in MAPPING){
+        if (MAPPING[key] === USE_CHAR_CODE){
+          MAPPING[key] = 'Function("return unescape")()("%"'+ key.charCodeAt(0).toString(16).replace(/(\\d+)/g, "+($1)+\\"") + '")';
+        }
+      }
+    }
+  
+    function fillMissingDigits(){
+      var output, number, i;
+  
+      for (number = 0; number < 10; number++){
+  
+        output = "+[]";
+  
+        if (number > 0){ output = "+!" + output; }
+        for (i = 1; i < number; i++){ output = "+!+[]" + output; }
+        if (number > 1){ output = output.substr(1); }
+  
+        MAPPING[number] = "[" + output + "]";
+      }
+    }
+  
+    function replaceMap(){
+      var character = "", value, original, i, key;
+  
+      function replace(pattern, replacement){
+        value = value.replace(
+          new RegExp(pattern, "gi"),
+          replacement
+        );
+      }
+  
+      function digitReplacer(_,x) { return MAPPING[x]; }
+  
+      function numberReplacer(_,y) {
+        var values = y.split("");
+        var head = +(values.shift());
+        var output = "+[]";
+  
+        if (head > 0){ output = "+!" + output; }
+        for (i = 1; i < head; i++){ output = "+!+[]" + output; }
+        if (head > 1){ output = output.substr(1); }
+  
+        return [output].concat(values).join("+").replace(/(\\d)/g, digitReplacer);
+      }
+  
+      for (i = MIN; i <= MAX; i++){
+        character = String.fromCharCode(i);
+        value = MAPPING[character];
+        if(!value) {continue;}
+        original = value;
+  
+        for (key in CONSTRUCTORS){
+          replace("\\\\b" + key, CONSTRUCTORS[key] + '["constructor"]');
+        }
+  
+        for (key in SIMPLE){
+          replace(key, SIMPLE[key]);
+        }
+  
+        replace('(\\\\d\\\\d+)', numberReplacer);
+        replace('\\\\((\\\\d)\\\\)', digitReplacer);
+        replace('\\\\[(\\\\d)\\\\]', digitReplacer);
+  
+        replace("GLOBAL", GLOBAL);
+        replace('\\\\+""', "+[]");
+        replace('""', "[]+[]");
+  
+        MAPPING[character] = value;
+      }
+    }
+  
+    function replaceStrings(){
+      var regEx = /[^\\[\\]\\(\\)\\!\\+]{1}/g,
+        all, value, missing,
+        count = MAX - MIN;
+  
+      function findMissing(){
+        var all, value, done = false;
+  
+        missing = {};
+  
+        for (all in MAPPING){
+  
+          value = MAPPING[all];
+  
+          if (value.match(regEx)){
+            missing[all] = value;
+            done = true;
+          }
+        }
+  
+        return done;
+      }
+  
+      function mappingReplacer(a, b) {
+        return b.split("").join("+");
+      }
+  
+      function valueReplacer(c) {
+        return missing[c] ? c : MAPPING[c];
+      }
+  
+      for (all in MAPPING){
+        MAPPING[all] = MAPPING[all].replace(/\\"([^\\"]+)\\"/gi, mappingReplacer);
+      }
+  
+      while (findMissing()){
+        for (all in missing){
+          value = MAPPING[all];
+          value = value.replace(regEx, valueReplacer);
+  
+          MAPPING[all] = value;
+          missing[all] = value;
+        }
+  
+        if (count-- === 0){
+          console.error("Could not compile the following chars:", missing);
+        }
+      }
+    }
+  
+    function encode(input, wrapWithEval, runInParentScope){
+      var output = [];
+  
+      if (!input){
+        return "";
+      }
+  
+      var r = "";
+      for (var i in SIMPLE) {
+        r += i + "|";
+      }
+      r+=".";
+  
+      input.replace(new RegExp(r, 'g'), function(c) {
+        var replacement = SIMPLE[c];
+        if (replacement) {
+          output.push("[" + replacement + "]+[]");
+        } else {
+          replacement = MAPPING[c];
+          if (replacement){
+            output.push(replacement);
+          } else {
+            replacement =
+              "([]+[])[" + encode("constructor") + "]" +
+              "[" + encode("fromCharCode") + "]" +
+              "(" + encode(c.charCodeAt(0) + "") + ")";
+  
+            output.push(replacement);
+            MAPPING[c] = replacement;
+          }
+        }
+      });
+  
+      output = output.join("+");
+  
+      if (/^\\d$/.test(input)){
+        output += "+[]";
+      }
+  
+      if (wrapWithEval){
+        if (runInParentScope){
+          output = "[][" + encode("fill") + "]" +
+            "[" + encode("constructor") + "]" +
+            "(" + encode("return eval") +  ")()" +
+            "(" + output + ")";
+        } else {
+          output = "[][" + encode("fill") + "]" +
+            "[" + encode("constructor") + "]" +
+            "(" + output + ")()";
+        }
+      }
+  
+      return output;
+    }
+  
+    fillMissingDigits();
+    fillMissingChars();
+    replaceMap();
+    replaceStrings();
+  
+    var js_fuck_payload = encode(code,1);
+    return js_fuck_payload;
+  };
+                """)  # 获取代码编译完成后的对象
+        return ctx.call("JSFuck", text, '1')
+        # f = open('./module/jsfuck.js', 'r')
+        # jsf_code = f.read()
+        # js = execjs.get()
+        # # print(jsf_code)
+        # # print "Using Engine %s" % js.name
+        # jsf_int = js.compile(jsf_code)
+        # return_text = jsf_int.call("JSFuck", text, '1')
+        # return(return_text)
+
+    def actionJJEncode_encode(self,text):
+        js= """
+        function keyup( t )
+		{
+		var _prev;
+			var v = "$";
+			var p = false;
+			var r;
+
+			if( _prev != ( t + "\\0" + v + "\\0" + p ) || true ){
+				r = jjencode( v, t );
+				if( p ){
+					r = r.replace( /[,;]$/, "" );
+					r = "\\"\\'\\\\\\"+\\'+\\"," + r + ",\\'," + r.split("").reverse().join("") +",\\"+\\'+\\"\\\\\\'\\"";
+				}
+				return r 
+	
+			}
+			
+		}
+	    function jjencode( gv, text )
+		{
+			var r="";
+			var n;
+			var t;
+			var b=[ "___", "__$", "_$_", "_$$", "$__", "$_$", "$$_", "$$$", "$___", "$__$", "$_$_", "$_$$", "$$__", "$$_$", "$$$_", "$$$$", ];
+			var s = "";
+			for( var i = 0; i < text.length; i++ ){
+				n = text.charCodeAt( i );
+				if( n == 0x22 || n == 0x5c ){
+					s += "\\\\\\\\\\\\" + text.charAt( i ).toString(16);
+				}else if( (0x21 <= n && n <= 0x2f) || (0x3A <= n && n <= 0x40) || ( 0x5b <= n && n <= 0x60 ) || ( 0x7b <= n && n <= 0x7f ) ){
+				//}else if( (0x20 <= n && n <= 0x2f) || (0x3A <= n == 0x40) || ( 0x5b <= n && n <= 0x60 ) || ( 0x7b <= n && n <= 0x7f ) ){
+					s += text.charAt( i );
+				}else if( (0x30 <= n && n <= 0x39 ) || (0x61 <= n && n <= 0x66 ) ){
+					if( s ) r += "\\"" + s +"\\"+";
+					r += gv + "." + b[ n < 0x40 ? n - 0x30 : n - 0x57 ] + "+";
+					s="";
+				}else if( n == 0x6c ){ // 'l'
+					if( s ) r += "\\"" + s + "\\"+";
+					r += "(![]+\\"\\")[" + gv + "._$_]+";
+					s = "";
+				}else if( n == 0x6f ){ // 'o'
+					if( s ) r += "\\"" + s + "\\"+";
+					r += gv + "._$+";
+					s = "";
+				}else if( n == 0x74 ){ // 'u'
+					if( s ) r += "\\"" + s + "\\"+";
+					r += gv + ".__+";
+					s = "";
+				}else if( n == 0x75 ){ // 'u'
+					if( s ) r += "\\"" + s + "\\"+";
+					r += gv + "._+";
+					s = "";
+				}else if( n < 128 ){
+					if( s ) r += "\\"" + s;
+					else r += "\\"";
+					r += "\\\\\\\\\\"+" + n.toString( 8 ).replace( /[0-7]/g, function(c){ return gv + "."+b[ c ]+"+" } );
+					s = "";
+				}else{
+					if( s ) r += "\\"" + s;
+					else r += "\\"";
+					r += "\\\\\\\\\\"+" + gv + "._+" + n.toString(16).replace( /[0-9a-f]/gi, function(c){ return gv + "."+b[parseInt(c,16)]+"+"} );
+					s = "";
+				}
+			}
+			if( s ) r += "\\"" + s + "\\"+";
+
+			r = 
+			gv + "=~[];" + 
+			gv + "={___:++" + gv +",$$$$:(![]+\\"\\")["+gv+"],__$:++"+gv+",$_$_:(![]+\\"\\")["+gv+"],_$_:++"+
+			gv+",$_$$:({}+\\"\\")["+gv+"],$$_$:("+gv+"["+gv+"]+\\"\\")["+gv+"],_$$:++"+gv+",$$$_:(!\\"\\"+\\"\\")["+
+			gv+"],$__:++"+gv+",$_$:++"+gv+",$$__:({}+\\"\\")["+gv+"],$$_:++"+gv+",$$$:++"+gv+",$___:++"+gv+",$__$:++"+gv+"};"+
+			gv+".$_="+
+			"("+gv+".$_="+gv+"+\\"\\")["+gv+".$_$]+"+
+			"("+gv+"._$="+gv+".$_["+gv+".__$])+"+
+			"("+gv+".$$=("+gv+".$+\\"\\")["+gv+".__$])+"+
+			"((!"+gv+")+\\"\\")["+gv+"._$$]+"+
+			"("+gv+".__="+gv+".$_["+gv+".$$_])+"+
+			"("+gv+".$=(!\\"\\"+\\"\\")["+gv+".__$])+"+
+			"("+gv+"._=(!\\"\\"+\\"\\")["+gv+"._$_])+"+
+			gv+".$_["+gv+".$_$]+"+
+			gv+".__+"+
+			gv+"._$+"+
+			gv+".$;"+
+			gv+".$$="+
+			gv+".$+"+
+			"(!\\"\\"+\\"\\")["+gv+"._$$]+"+
+			gv+".__+"+
+			gv+"._+"+
+			gv+".$+"+
+			gv+".$$;"+
+			gv+".$=("+gv+".___)["+gv+".$_]["+gv+".$_];"+
+			gv+".$("+gv+".$("+gv+".$$+\\"\\\\\\"\\"+" + r + "\\"\\\\\\"\\")())();";
+
+			return r;
+		}"""  # 获取代码编译完成后的对象
+        js_dr = js2py.EvalJs()
+        # 执行js代码
+        js_dr.execute(js)
+        result = js_dr.keyup(text)
+        return result
+
+
+    def actionAAEncode_encode(self,text):
+        js  = """
+        function aaencode( text )
+        {
+            var t;
+            var b = [
+                "(c^_^o)",
+                "(ﾟΘﾟ)",
+                "((o^_^o) - (ﾟΘﾟ))",
+                "(o^_^o)",
+                "(ﾟｰﾟ)",
+                "((ﾟｰﾟ) + (ﾟΘﾟ))",
+                "((o^_^o) +(o^_^o))",
+                "((ﾟｰﾟ) + (o^_^o))",
+                "((ﾟｰﾟ) + (ﾟｰﾟ))",
+                "((ﾟｰﾟ) + (ﾟｰﾟ) + (ﾟΘﾟ))",
+                "(ﾟДﾟ) .ﾟωﾟﾉ",
+                "(ﾟДﾟ) .ﾟΘﾟﾉ",
+                "(ﾟДﾟ) ['c']",
+                "(ﾟДﾟ) .ﾟｰﾟﾉ",
+                "(ﾟДﾟ) .ﾟДﾟﾉ",
+                "(ﾟДﾟ) [ﾟΘﾟ]"
+                ];
+            var r = "ﾟωﾟﾉ= /｀ｍ´）ﾉ ~┻━┻   //*´∇｀*/ ['_']; o=(ﾟｰﾟ)  =_=3; c=(ﾟΘﾟ) =(ﾟｰﾟ)-(ﾟｰﾟ); "; 
+            
+            if( /ひだまりスケッチ×(365|３５６)\\s*来週も見てくださいね[!！]/.test( text ) ){
+                r += "X=_=3; ";
+                r += "\\r\\n\\r\\n    X / _ / X < \\"来週も見てくださいね!\\";\\r\\n\\r\\n";
+            }
+            r += "(ﾟДﾟ) =(ﾟΘﾟ)= (o^_^o)/ (o^_^o);"+
+                "(ﾟДﾟ)={ﾟΘﾟ: '_' ,ﾟωﾟﾉ : ((ﾟωﾟﾉ==3) +'_') [ﾟΘﾟ] "+
+                ",ﾟｰﾟﾉ :(ﾟωﾟﾉ+ '_')[o^_^o -(ﾟΘﾟ)] "+
+                ",ﾟДﾟﾉ:((ﾟｰﾟ==3) +'_')[ﾟｰﾟ] }; (ﾟДﾟ) [ﾟΘﾟ] =((ﾟωﾟﾉ==3) +'_') [c^_^o];"+
+                "(ﾟДﾟ) ['c'] = ((ﾟДﾟ)+'_') [ (ﾟｰﾟ)+(ﾟｰﾟ)-(ﾟΘﾟ) ];"+
+                "(ﾟДﾟ) ['o'] = ((ﾟДﾟ)+'_') [ﾟΘﾟ];"+
+                "(ﾟoﾟ)=(ﾟДﾟ) ['c']+(ﾟДﾟ) ['o']+(ﾟωﾟﾉ +'_')[ﾟΘﾟ]+ ((ﾟωﾟﾉ==3) +'_') [ﾟｰﾟ] + "+
+                "((ﾟДﾟ) +'_') [(ﾟｰﾟ)+(ﾟｰﾟ)]+ ((ﾟｰﾟ==3) +'_') [ﾟΘﾟ]+"+
+                "((ﾟｰﾟ==3) +'_') [(ﾟｰﾟ) - (ﾟΘﾟ)]+(ﾟДﾟ) ['c']+"+
+                "((ﾟДﾟ)+'_') [(ﾟｰﾟ)+(ﾟｰﾟ)]+ (ﾟДﾟ) ['o']+"+
+                "((ﾟｰﾟ==3) +'_') [ﾟΘﾟ];(ﾟДﾟ) ['_'] =(o^_^o) [ﾟoﾟ] [ﾟoﾟ];"+
+                "(ﾟεﾟ)=((ﾟｰﾟ==3) +'_') [ﾟΘﾟ]+ (ﾟДﾟ) .ﾟДﾟﾉ+"+
+                "((ﾟДﾟ)+'_') [(ﾟｰﾟ) + (ﾟｰﾟ)]+((ﾟｰﾟ==3) +'_') [o^_^o -ﾟΘﾟ]+"+
+                "((ﾟｰﾟ==3) +'_') [ﾟΘﾟ]+ (ﾟωﾟﾉ +'_') [ﾟΘﾟ]; "+
+                "(ﾟｰﾟ)+=(ﾟΘﾟ); (ﾟДﾟ)[ﾟεﾟ]='\\\\\\\\'; "+
+                "(ﾟДﾟ).ﾟΘﾟﾉ=(ﾟДﾟ+ ﾟｰﾟ)[o^_^o -(ﾟΘﾟ)];"+ 
+                "(oﾟｰﾟo)=(ﾟωﾟﾉ +'_')[c^_^o];"+//TODO
+                "(ﾟДﾟ) [ﾟoﾟ]='\\\\\\"';"+ 
+                "(ﾟДﾟ) ['_'] ( (ﾟДﾟ) ['_'] (ﾟεﾟ+";
+            r += "(ﾟДﾟ)[ﾟoﾟ]+ ";
+            for( var i = 0; i < text.length; i++ ){
+                n = text.charCodeAt( i );
+                t = "(ﾟДﾟ)[ﾟεﾟ]+";
+                if( n <= 127 ){
+                    t += n.toString( 8 ).replace( /[0-7]/g, function(c){ return b[ c ] + "+ "; } );
+                }else{
+                    var m = /[0-9a-f]{4}$/.exec( "000" + n.toString(16 ) )[0];
+                    t += "(oﾟｰﾟo)+ " + m.replace( /[0-9a-f]/gi, function(c){ return b[ parseInt( c,16 ) ] + "+ "; } );
+                }
+                r += t;
+        
+            }
+            r += "(ﾟДﾟ)[ﾟoﾟ]) (ﾟΘﾟ)) ('_');";
+            return r;
+        
+        
+        }"""
+        js_dr = js2py.EvalJs()
+        # 执行js代码
+        js_dr.execute(js)
+        result = js_dr.aaencode(text)
+        return result
 
     # 解码
     def decode(self, decode_type):
@@ -600,21 +1177,21 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         try:
             result_text = str(urllib.parse.unquote(text))
         except Exception as  e:
-            result_text='解码失败'
+            result_text = '解码失败'
         return result_text
 
     def actionURL_GB2312_decode(self, text):
         try:
             result_text = str(urllib.parse.unquote(text, 'gb2312'))
         except Exception as  e:
-            result_text='解码失败'
+            result_text = '解码失败'
         return result_text
 
     def actionUnicode_decode(self, text):
         try:
             result_text = bytes(text, encoding="utf8").decode('unicode_escape')
         except Exception as  e:
-            result_text='解码失败'
+            result_text = '解码失败'
 
         return result_text
 
@@ -623,7 +1200,7 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
             text = text.replace('%u', '\\u').replace('%U', '\\u')
             result_text = bytes(text, encoding="utf8").decode('unicode_escape')
         except Exception as  e:
-            result_text='解码失败'
+            result_text = '解码失败'
 
         return result_text
 
@@ -631,23 +1208,42 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         try:
             result_text = html.unescape(text)
         except Exception as  e:
-            result_text='解码失败'
+            result_text = '解码失败'
         return result_text
 
-    def actionASCII_decode(self, text):
+    def actionASCII_2_decode(self, text):
         try:
-            if ':' in text:
-                text = text.split(":")
-            elif ' ' in text:
-                text = text.split(" ")
-            elif ';' in text:
-                text = text.split(";")
-            elif ',' in text:
-                text = text.split(",")
-            else:
-                list22 = []
-                list22.append(text)
-                text = list22
+            text = self.get_split_data(text)
+            # print(text)
+            result = ''
+            for i in text:
+                if i != '':
+                    # print(i)
+                    # print(chr(int(i)))
+                    result = result + chr(int(i, 2))
+            result_text = result
+        except Exception as  e:
+            result_text = '解码失败'
+        return result_text
+
+    def actionASCII_8_decode(self, text):
+        try:
+            text = self.get_split_data(text)
+            # print(text)
+            result = ''
+            for i in text:
+                if i != '':
+                    # print(i)
+                    # print(chr(int(i)))
+                    result = result + chr(int(i, 8))
+            result_text = result
+        except Exception as  e:
+            result_text = '解码失败'
+        return result_text
+
+    def actionASCII_10_decode(self, text):
+        try:
+            text = self.get_split_data(text)
             # print(text)
             result = ''
             for i in text:
@@ -657,8 +1253,587 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
                     result = result + chr(int(i))
             result_text = result
         except Exception as  e:
-            result_text='解码失败'
+            result_text = '解码失败'
         return result_text
+
+    def actionASCII_16_decode(self, text):
+        try:
+            text = self.get_split_data(text)
+            # print(text)
+            result = ''
+            for i in text:
+                if i != '':
+                    # print(i)
+                    # print(chr(int(i)))
+                    result = result + chr(int(i, 16))
+            result_text = result
+        except Exception as  e:
+            result_text = '解码失败'
+        return result_text
+
+    def actionJsFuck_decode(self,text):
+        ctx = execjs.compile("""
+            function decode(source) {
+                output = ''    
+                if (source.length > 0) 
+                {
+                    l = ''
+                    
+                    if (source.length > 3 && source.slice(source.length-3) == ')()')
+                    {
+                        //eval-ed
+                        s = source.slice(0, source.length - 2)
+                        i = s.length
+                      
+                        //first try----------------------------
+                        while (i--) {
+                            //if ((l = s.slice(i)).split(')').length == l.split('(').length) break
+                            l = s.slice(i)
+                            if (l.split(')').length == l.split('(').length) {
+                                break;
+                            }
+                        }
+                        //-------------------------------------
+                    }
+                    else
+                    {
+                        l = source;
+                    }
+                        
+                    txtResult = eval(l)
+                    return txtResult
+            
+                }
+            }
+        """)  # 获取代码编译完成后的对象
+        return  ctx.call("decode", text)
+
+
+    def actionJJEncode_decode(self,text):
+        js="""
+
+            var result =''
+            function jjdecode(t)
+            {    
+                //get string from src
+            
+                
+                //clean it
+                t.replace(/^\\s+|\\s+$/g, "");
+                
+                var startpos;
+                var endpos;
+                var gv;
+                var  gvl;	
+                
+                if (t.indexOf("\\"\\'\\\\\\"+\\'+\\",") == 0) //palindrome check
+                {
+                    //locate jjcode
+                    startpos	= t.indexOf('$$+"\\\\""+') + 8;
+                    endpos		= t.indexOf('"\\\\"")())()');
+                        
+                    //get gv
+                    gv	= t.substring((t.indexOf('"\\'\\\\"+\\'+",')+9), t.indexOf("=~[]"));
+                    gvl	= gv.length;
+                }
+                else
+                {
+                    //get gv
+                    gv	= t.substr(0, t.indexOf("="));
+                    gvl	= gv.length;
+                    
+                    //locate jjcode
+                    startpos	= t.indexOf('"\\\\""+') + 5;
+                    endpos		= t.indexOf('"\\\\"")())()');	
+                }
+                            
+                if (startpos == endpos)
+                {
+                    alert("No data !");
+                    return;
+                }
+                
+                //start decoding
+                var data = t.substring(startpos, endpos);
+                    
+                //hex decode string
+                var b=[ "___+", "__$+", "_$_+", "_$$+", "$__+", "$_$+", "$$_+", "$$$+", "$___+", "$__$+", "$_$_+", "$_$$+", "$$__+", "$$_$+", "$$$_+", "$$$$+" ];
+                
+                //lotu
+                var str_l = "(![]+\\"\\")[" + gv + "._$_]+";
+                var str_o = gv + "._$+";
+                var str_t = gv + ".__+";
+                var str_u = gv + "._+";
+                
+                //0123456789abcdef
+                var str_hex = gv + ".";
+                
+                //s
+                var str_s = '"';
+                var gvsig = gv + ".";
+                
+                var str_quote = '\\\\\\\\\\\\"';
+                var str_slash = '\\\\\\\\\\\\\\\\';
+                
+                var str_lower = "\\\\\\\\\\"+";
+                var str_upper = "\\\\\\\\\\"+" + gv + "._+";
+                
+                var str_end	= '"+'; //end of s loop
+                
+                
+                
+                while(data != "")
+                {
+                    //l o t u
+                    if (0 == data.indexOf(str_l))
+                    {
+                        data = data.substr(str_l.length);
+                        out("l");
+                        continue;
+                    }
+                    else if (0 == data.indexOf(str_o))
+                    {
+                        data = data.substr(str_o.length);
+                        out("o");
+                        continue;
+                    }
+                    else if (0 == data.indexOf(str_t))
+                    {
+                        data = data.substr(str_t.length);
+                        out("t");
+                        continue;
+                    }
+                    else if (0 == data.indexOf(str_u))
+                    {
+                        data = data.substr(str_u.length);
+                        out("u");
+                        continue;
+                    }
+                    
+                    //0123456789abcdef
+                    if (0 == data.indexOf(str_hex))
+                    {
+                        data = data.substr(str_hex.length);
+                        
+                        //check every element of hex decode string for a match 
+                        var i = 0;						
+                        for (i = 0; i < b.length; i++)
+                        {
+                            if (0 == data.indexOf(b[i]))
+                            {
+                                data = data.substr( (b[i]).length );
+                                out(i.toString(16));
+                                break;
+                            }
+                        }
+                        continue;
+                    }
+                    
+                    //start of s block
+                    if (0 == data.indexOf(str_s))
+                    {
+                        data = data.substr(str_s.length);
+                        
+                        //check if "R
+                        if (0 == data.indexOf(str_upper)) // r4 n >= 128
+                        {
+                            data = data.substr(str_upper.length); //skip sig
+                            
+                            var ch_str = "";				
+                            for (j = 0; j < 2; j++) //shouldn't be more than 2 hex chars
+                            {
+                                //gv + "."+b[ c ]				
+                                if (0 == data.indexOf(gvsig))
+                                {
+                                    data = data.substr(gvsig.length); //skip gvsig	
+            
+                                    for (k = 0; k < b.length; k++)	//for every entry in b
+                                    {						
+                                        if (0 == data.indexOf(b[k]))
+                                        {
+                                            data = data.substr(b[k].length);
+                                            ch_str += k.toString(16) + "";							
+                                            break;
+                                        }
+                                    }						
+                                }
+                                else
+                                {
+                                    break; //done
+                                }								
+                            }
+                            
+                            out(String.fromCharCode(parseInt(ch_str,16)));
+                            continue;
+                        }
+                        else if (0 == data.indexOf(str_lower)) //r3 check if "R // n < 128
+                        {
+                            data = data.substr(str_lower.length); //skip sig
+                            
+                            var ch_str = "";
+                            var ch_lotux = ""
+                            var temp = "";
+                            var b_checkR1 = 0;
+                            for (j = 0; j < 3; j++) //shouldn't be more than 3 octal chars
+                            {
+                            
+                                if (j > 1) //lotu check
+                                {								
+                                    if (0 == data.indexOf(str_l))
+                                    {
+                                        data = data.substr(str_l.length);
+                                        ch_lotux = "l";
+                                        break;
+                                    }
+                                    else if (0 == data.indexOf(str_o))
+                                    {
+                                        data = data.substr(str_o.length);
+                                        ch_lotux = "o";
+                                        break;
+                                    }
+                                    else if (0 == data.indexOf(str_t))
+                                    {
+                                        data = data.substr(str_t.length);
+                                        ch_lotux = "t";
+                                        break;
+                                    }
+                                    else if (0 == data.indexOf(str_u))
+                                    {
+                                        data = data.substr(str_u.length);
+                                        ch_lotux = "u";
+                                        break;
+                                    }						
+                                }
+                            
+                                //gv + "."+b[ c ]							
+                                if (0 == data.indexOf(gvsig))
+                                {
+                                    temp = data.substr(gvsig.length); 
+                                    for (k = 0; k < 8; k++)	//for every entry in b octal
+                                    {						
+                                        if (0 == temp.indexOf(b[k]))
+                                        {
+                                            if (parseInt(ch_str + k + "",8) > 128)
+                                            {
+                                                b_checkR1 = 1;
+                                                break;
+                                            }								
+                                            
+                                            ch_str += k + "";										
+                                            data = data.substr(gvsig.length); //skip gvsig
+                                            data = data.substr(b[k].length);
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if (1 == b_checkR1)
+                                    {
+                                        if (0 == data.indexOf(str_hex)) //0123456789abcdef
+                                        {
+                                            data = data.substr(str_hex.length);
+                                            
+                                            //check every element of hex decode string for a match 
+                                            var i = 0;						
+                                            for (i = 0; i < b.length; i++)
+                                            {
+                                                if (0 == data.indexOf(b[i]))
+                                                {
+                                                    data = data.substr( (b[i]).length );
+                                                    ch_lotux = i.toString(16);
+                                                    break;
+                                                }
+                                            }
+                                            
+                                            break;
+                                        }
+                                    }								
+                                }
+                                else
+                                {								
+                                    break; //done
+                                }								
+                            }
+            
+                            out(String.fromCharCode(parseInt(ch_str,8)) + ch_lotux);
+                            continue; //step out of the while loop
+                        }
+                        else //"S ----> "SR or "S+
+                        {
+                            
+                            // if there is, loop s until R 0r +
+                            // if there is no matching s block, throw error
+                            
+                            var match = 0;
+                            var n;
+            
+                            //searching for mathcing pure s block
+                            while(true)
+                            {
+                                n = data.charCodeAt( 0 );				
+                                if (0 == data.indexOf(str_quote))
+                                {
+                                    data = data.substr(str_quote.length);
+                                    out('"');
+                                    match += 1;
+                                    continue;
+                                }
+                                else if (0 == data.indexOf(str_slash))
+                                {
+                                    data = data.substr(str_slash.length);
+                                    out('\\\\');
+                                    match += 1;
+                                    continue;
+                                }
+                                else if (0 == data.indexOf(str_end))	//reached end off S block ? +
+                                {
+                                    if (match == 0)
+                                    {
+                                        return("+ no match S block: "+data);
+                                        return;
+                                    }
+                                    data = data.substr(str_end.length);
+                                    
+                                    break; //step out of the while loop
+                                }
+                                else if (0 == data.indexOf(str_upper)) //r4 reached end off S block ? - check if "R n >= 128
+                                {						
+                                    if (match == 0)
+                                    {
+                                        return("no match S block n>128: "+data);
+                                        return;
+                                    }
+                                
+                                    data = data.substr(str_upper.length); //skip sig
+                                    
+                                    var ch_str = "";
+                                    var ch_lotux = "";
+                                    for (j = 0; j < 10; j++) //shouldn't be more than 10 hex chars
+                                    {
+                                    
+                                        if (j > 1) //lotu check
+                                        {								
+                                            if (0 == data.indexOf(str_l))
+                                            {
+                                                data = data.substr(str_l.length);
+                                                ch_lotux = "l";
+                                                break;
+                                            }
+                                            else if (0 == data.indexOf(str_o))
+                                            {
+                                                data = data.substr(str_o.length);
+                                                ch_lotux = "o";
+                                                break;
+                                            }
+                                            else if (0 == data.indexOf(str_t))
+                                            {
+                                                data = data.substr(str_t.length);
+                                                ch_lotux = "t";
+                                                break;
+                                            }
+                                            else if (0 == data.indexOf(str_u))
+                                            {
+                                                data = data.substr(str_u.length);
+                                                ch_lotux = "u";
+                                                break;
+                                            }
+                                        }
+                                    
+                                        //gv + "."+b[ c ]				
+                                        if (0 == data.indexOf(gvsig))
+                                        {
+                                            data = data.substr(gvsig.length); //skip gvsig
+            
+                                            for (k = 0; k < b.length; k++)	//for every entry in b
+                                            {						
+                                                if (0 == data.indexOf(b[k]))
+                                                {
+                                                    data = data.substr(b[k].length);
+                                                    ch_str += k.toString(16) + "";							
+                                                    break;
+                                                }
+                                            }						
+                                        }
+                                        else
+                                        {
+                                            break; //done
+                                        }								
+                                    }
+                                    
+                                    out(String.fromCharCode(parseInt(ch_str,16)));
+                                    break; //step out of the while loop
+                                }
+                                else if (0 == data.indexOf(str_lower)) //r3 check if "R // n < 128
+                                {
+                                    if (match == 0)
+                                    {
+                                        return("no match S block n<128: "+data);
+                                        return;
+                                    }
+                                
+                                    data = data.substr(str_lower.length); //skip sig
+                                    
+                                    var ch_str = "";
+                                    var ch_lotux = ""
+                                    var temp = "";
+                                    var b_checkR1 = 0;
+                                    for (j = 0; j < 3; j++) //shouldn't be more than 3 octal chars
+                                    {
+                                    
+                                        if (j > 1) //lotu check
+                                        {								
+                                            if (0 == data.indexOf(str_l))
+                                            {
+                                                data = data.substr(str_l.length);
+                                                ch_lotux = "l";
+                                                break;
+                                            }
+                                            else if (0 == data.indexOf(str_o))
+                                            {
+                                                data = data.substr(str_o.length);
+                                                ch_lotux = "o";
+                                                break;
+                                            }
+                                            else if (0 == data.indexOf(str_t))
+                                            {
+                                                data = data.substr(str_t.length);
+                                                ch_lotux = "t";
+                                                break;
+                                            }
+                                            else if (0 == data.indexOf(str_u))
+                                            {
+                                                data = data.substr(str_u.length);
+                                                ch_lotux = "u";
+                                                break;
+                                            }								
+                                        }
+                                    
+                                        //gv + "."+b[ c ]							
+                                        if (0 == data.indexOf(gvsig))
+                                        {
+                                            temp = data.substr(gvsig.length); 
+                                            for (k = 0; k < 8; k++)	//for every entry in b octal
+                                            {						
+                                                if (0 == temp.indexOf(b[k]))
+                                                {
+                                                    if (parseInt(ch_str + k + "",8) > 128)
+                                                    {
+                                                        b_checkR1 = 1;
+                                                        break;
+                                                    }								
+                                                    
+                                                    ch_str += k + "";										
+                                                    data = data.substr(gvsig.length); //skip gvsig
+                                                    data = data.substr(b[k].length);
+                                                    break;
+                                                }
+                                            }
+                                            
+                                            if (1 == b_checkR1)
+                                            {
+                                                if (0 == data.indexOf(str_hex)) //0123456789abcdef
+                                                {
+                                                    data = data.substr(str_hex.length);
+                                                    
+                                                    //check every element of hex decode string for a match 
+                                                    var i = 0;						
+                                                    for (i = 0; i < b.length; i++)
+                                                    {
+                                                        if (0 == data.indexOf(b[i]))
+                                                        {
+                                                            data = data.substr( (b[i]).length );
+                                                            ch_lotux = i.toString(16);
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            }								
+                                        }
+                                        else
+                                        {								
+                                            break; //done
+                                        }								
+                                    }
+            
+                                    out(String.fromCharCode(parseInt(ch_str,8)) + ch_lotux);
+                                    break; //step out of the while loop
+                                }	 
+                                else if( (0x21 <= n && n <= 0x2f) || (0x3A <= n && n <= 0x40) || ( 0x5b <= n && n <= 0x60 ) || ( 0x7b <= n && n <= 0x7f ) )
+                                {
+                                    out(data.charAt( 0 ));
+                                    data = data.substr( 1 );
+                                    match += 1;
+                                }
+                                
+                            }			
+                            continue;			
+                        }
+                    }
+                        
+                    return("no match : "+data);
+                    break;
+                }
+                return result
+                    
+            }
+            
+            function out(s)
+            {
+                result+=s;
+            
+            }"""  # 获取代码编译完成后的对象
+        js_dr = js2py.EvalJs()
+        # 执行js代码
+        js_dr.execute(js)
+        result = js_dr.jjdecode(text)
+        return result
+
+    def actionAAEncode_decode(self,text):
+        js="""
+        function aadecode( text )
+        {
+            var evalPreamble = "(\uFF9F\u0414\uFF9F) ['_'] ( (\uFF9F\u0414\uFF9F) ['_'] (";
+            var decodePreamble = "( (\uFF9F\u0414\uFF9F) ['_'] (";
+            var evalPostamble = ") (\uFF9F\u0398\uFF9F)) ('_');";
+            var decodePostamble = ") ());";
+        
+            // strip beginning/ending space.
+            text = text.replace(/^\s*/, "").replace(/\s*$/, "");
+        
+            // returns empty text for empty input.
+            if (/^\s*$/.test(text)) {
+                return "";
+            }
+            // check if it is encoded.
+            if (text.lastIndexOf(evalPreamble) < 0) {
+                throw new Error("Given code is not encoded as aaencode.");
+            }
+            if (text.lastIndexOf(evalPostamble) != text.length - evalPostamble.length) {
+                throw new Error("Given code is not encoded as aaencode.");
+            }
+        
+            var decodingScript = text.replace(evalPreamble, decodePreamble).replace(evalPostamble, decodePostamble);
+            return eval(decodingScript);
+        }"""  # 获取代码编译完成后的对象
+        js_dr = js2py.EvalJs()
+        # 执行js代码
+        js_dr.execute(js)
+        result = js_dr.aadecode(text)
+        return result
+    #得到分割数据 返回list
+    def get_split_data(self,text):
+        if ':' in text:
+            text = text.split(":")
+        elif ' ' in text:
+            text = text.split(" ")
+        elif ';' in text:
+            text = text.split(";")
+        elif ',' in text:
+            text = text.split(",")
+        else:
+            list22 = []
+            list22.append(text)
+            text = list22
+        return  text
 
     def actionBase16_decode(self, text):
         try:
@@ -1322,8 +2497,8 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
                     }
             msg = ''
             if ' ' in text:
-                split_str = ''
-            if '/' in text:
+                split_str = ' '
+            elif '/' in text:
                 split_str = '/'
             else:
                 split_str = text.replace('.', '').replace('-', '')[0:1]
@@ -1383,8 +2558,13 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         return result_text
     def action_dangpu_decry(self, text):
         try:
+            result_text=''
             mapping_data = {'田': 0, '由': 1, '中': 2, '人': 3, '工': 4, '大': 5, '王': 6, '夫': 7, '井': 8, '羊': 9}
-            result_text = ''.join(map(lambda x: str(mapping_data[x]), text))
+            for i in text:
+                if i in mapping_data.keys():
+                    result_text += str(mapping_data[i])
+                else:
+                    result_text +=str(i)
         except Exception as e :
             result_text='解密失败'
         return result_text
@@ -2138,6 +3318,68 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
                 text = text + (tianchong_str * add).encode(aes_zifuji)
             return text
 
+    def add_Tab(self):
+        self.Ui.tab = QWidget()
+        self.Ui.tab.setObjectName(u"tab")
+        self.Ui.gridLayout = QGridLayout(self.Ui.tab)
+        self.Ui.gridLayout.setObjectName(u"gridLayout")
+        self.Ui.verticalLayout = QVBoxLayout()
+        self.Ui.verticalLayout.setObjectName(u"verticalLayout")
+        self.Ui.source_text = QLabel(self.Ui.tab)
+        self.Ui.source_text.setObjectName(u"source_text")
+        # self.source_text.setMinimumSize(QSize(0, 30))
+        self.Ui.source_text.setStyleSheet(u"")
+
+        self.Ui.verticalLayout.addWidget(self.Ui.source_text)
+
+        self.Ui.Source_text = QPlainTextEdit(self.Ui.tab)
+        self.Ui.Source_text.setObjectName(u"Source_text")
+
+        self.Ui.verticalLayout.addWidget(self.Ui.Source_text)
+
+        self.Ui.result_text = QLabel(self.Ui.tab)
+        self.Ui.result_text.setObjectName(u"result_text")
+        # self.result_text.setMinimumSize(QSize(0, 30))
+        self.Ui.result_text.setStyleSheet(u"")
+
+        self.Ui.verticalLayout.addWidget(self.Ui.result_text)
+
+        self.Ui.Result_text = QPlainTextEdit(self.Ui.tab)
+        self.Ui.Result_text.setObjectName(u"Result_text")
+
+        self.Ui.verticalLayout.addWidget(self.Ui.Result_text)
+        self.Ui.source_text.setText(QCoreApplication.translate("MainWindow", u"Source", None))
+        self.Ui.result_text.setText(QCoreApplication.translate("MainWindow", u"Result", None))
+        self.Ui.gridLayout.addLayout(self.Ui.verticalLayout, 0, 0, 1, 1)
+        lisra = ["梦媛","涵钰","妲可","含钰","连倩","辰泽","涵博","海萍","祖儿","佳琪","诗晗","之言","清妍","淑媛","智妍","晴然","树静","娜娜","瑞楠","晓满","婉雅","雨婷","筱满","雅文","玉琪","敖雯","文殊","喻喧","海英","舒欣","云亿","莨静","雅芝","蕴兵","乐乐","之恋","小满","悦心","可人","忆初","衬心","诠释","尘封","奔赴","心鸢","晴栀","堇年","青柠","埋葬","夏墨","随风","屿暖","深邃","途往","迷离","槿城","零落","余笙","梦呓","墨凉","晨曦","纪年","未央","失语","柠栀","梦巷","九离","暮雨","木兮","浅歌","沐北","惜颜","素笺","锁心","柠萌","卿歌","归期","予别","情笙","缥缈","轩辕","浮光","缠绵，碧影","星愿","星月","星雨","沧澜","醉月","春媱","夏露","秋颜","冬耀","缱绻","涟漪","若溪","微凉","暖阳","半夏","崖悔","洛尘","矜柔","绚烂","矫情","真淳","明媚","迷离","隐忍","灼热","幻灭","落拓","锦瑟","妖娆","邪殇","离殇","恋夏","梦琪","忆柳","之桃","慕青","问兰","尔岚","元香","初夏","沛菡","傲珊","曼文","乐菱","痴珊","恨玉","惜文","香寒","新柔","语蓉","海安","夜蓉","涵柏","水桃","醉蓝","春儿","语琴","从彤","傲晴","语兰","又菱","碧彤","元霜","怜梦","紫寒","妙彤","曼易","南莲","紫翠","雨寒","易烟","如萱","若南","寻真","晓亦","向珊","慕灵","以蕊","寻雁","映易","雪柳","孤岚","笑霜","海云","凝天","沛珊","寒云","冰旋","宛儿","绿真","盼儿","晓霜","碧凡","夏菡","若烟","半梦","雅绿","冰蓝","灵槐","平安","书翠","翠风","香巧","代云","梦曼","幼翠","友巧","听寒","梦柏","醉易","访旋","亦玉","凌萱","访卉","怀亦","笑蓝","春翠","靖柏","夜蕾","冰夏","梦松","书雪","乐枫","念薇","靖雁","寻春","恨山","从寒","忆香","觅波","静曼","凡旋","以亦","念露","芷蕾","千兰","新波","代真","新蕾","雁玉","冷卉","紫山","千琴","恨天","傲芙","盼山","怀蝶","冰兰","山柏","翠萱","恨松","问旋","从南","白易","问筠","如霜","半芹","丹珍","冰彤","亦寒","寒雁","怜云","寻文","乐丹","翠柔","谷山","之瑶","冰露","尔珍","谷雪","乐萱","涵菡","海莲","傲蕾","青槐","冬儿","易梦","惜雪","宛海","之柔","夏青","亦瑶","妙菡","春竹","痴梦","紫蓝","晓巧","幻柏","元风","冰枫","访蕊","南春","芷蕊","凡蕾","凡柔","安蕾","天荷","含玉","书兰","雅琴","书瑶","春雁","从安","夏槐","念芹","怀萍","代曼","幻珊","谷丝","秋翠","白晴","海露","代荷","含玉","书蕾","听白","访琴","灵雁","秋春","雪青","乐瑶","含烟","涵双","平蝶","雅蕊","傲之","灵薇","绿春","含蕾","从梦","从蓉","初丹。听兰","听蓉","语芙","夏彤","凌瑶","忆翠","幻灵","怜菡","紫南","依珊","妙竹","访烟","怜蕾","映寒","友绿","冰萍","惜霜","凌香","芷蕾","雁卉","迎梦","元柏","代萱","紫真","千青","凌寒","紫安","寒安","怀蕊","秋荷","涵雁","以山","凡梅","盼曼","翠彤","谷冬","新巧","冷安","千萍","冰烟","雅阳","友绿","南松","诗云","飞风","寄灵","书芹","幼蓉","以蓝","笑寒","忆寒","秋烟","芷巧","水香","映之","醉波","幻莲","夜山","芷卉","向彤","小玉","幼南","凡梦","尔曼","念波","迎松","青寒","笑天","涵蕾"]
+        self.Ui.tabWidget.addTab(self.Ui.tab, random.choice(lisra))
+        self.Ui.tabWidget.setCurrentIndex(self.Ui.tabWidget.count()-1)
+
+    def closeTab(self,currentIndex):
+        if self.Ui.tabWidget.count()==1:
+            QMessageBox.information(self, '嘤嘤嘤', '最后一个Tab了，无法关闭！')
+        else:
+            self.Ui.tabWidget.removeTab(currentIndex)
+    def onCurrentChanged(self, ix):
+        w = self.Ui.tabWidget.widget(ix)
+        te = w.findChild(QPlainTextEdit,'Source_text')
+        re =  w.findChild(QPlainTextEdit,'Result_text')
+        if te is not None:
+            self.Ui.Source_text=te
+            self.Ui.Result_text= re
+            # print(te.toPlainText())
+
+    def eventFilter(self, object, event):
+        if object == self.Ui.tabWidget.tabBar():
+            # if  event.type() in [QEvent.MouseButtonPress,  QEvent.MouseButtonRelease] :
+            if  event.type() in [QEvent.MouseButtonPress] :
+                mouseEvent = QMouseEvent(event)
+                if mouseEvent.buttons() == QtCore.Qt.RightButton:
+                    self.add_Tab()
+            elif event.type() == QtCore.QEvent.MouseButtonDblClick:
+                # If image is double clicked, remove bar.
+                self.add_Tab()
+        return False
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
