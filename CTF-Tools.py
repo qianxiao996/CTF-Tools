@@ -25,8 +25,8 @@ import frozen_dir
 from Crypto.Cipher import AES
 SETUP_DIR = frozen_dir.app_path()
 sys.path.append(SETUP_DIR)
-version = '1.3.3'
-update_time = '20211206'
+version = '1.3.4'
+update_time = '20211208'
 
 
 class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -47,9 +47,7 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Ui.Source_Paste_Button.clicked.connect(lambda: self.paste('Source'))  # paste_Source
         self.Ui.zhuanyuan.clicked.connect(self.zhuan_yuanwenben)  # paste_result
         # encode
-        self.Ui.actionURL_UTF8_encode.triggered.connect(lambda: self.encode(self.Ui.actionURL_UTF8_encode.objectName()))
-        self.Ui.actionURL_GB2312_encode.triggered.connect(
-            lambda: self.encode(self.Ui.actionURL_GB2312_encode.objectName()))
+        self.Ui.actionURL_encode.triggered.connect(lambda: self.encode(self.Ui.actionURL_encode.objectName()))
         self.Ui.actionUnicode_encode.triggered.connect(lambda: self.encode(self.Ui.actionUnicode_encode.objectName()))
         self.Ui.actionEscape_U_encode.triggered.connect(lambda: self.encode(self.Ui.actionEscape_U_encode.objectName()))
         self.Ui.actionHtmlEncode_encode.triggered.connect(
@@ -85,9 +83,7 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Ui.actiontupian_hex_encode.triggered.connect(
             lambda: self.encode(self.Ui.actiontupian_hex_encode.objectName()))
         # decode
-        self.Ui.actionURL_UTF8_decode.triggered.connect(lambda: self.decode(self.Ui.actionURL_UTF8_decode.objectName()))
-        self.Ui.actionURL_GB2312_decode.triggered.connect(
-            lambda: self.decode(self.Ui.actionURL_GB2312_decode.objectName()))
+        self.Ui.actionURL_decode.triggered.connect(lambda: self.decode(self.Ui.actionURL_decode.objectName()))
         self.Ui.actionUnicode_decode.triggered.connect(lambda: self.decode(self.Ui.actionUnicode_decode.objectName()))
         self.Ui.actionEscape_U_decode.triggered.connect(lambda: self.decode(self.Ui.actionEscape_U_decode.objectName()))
         self.Ui.actionHtmlEncode_decode.triggered.connect(
@@ -247,7 +243,7 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
             return 0
         else:
             self.Ui.Result_text.clear()
-            self.out_result("URL UTF8:\n"+self.actionURL_UTF8_decode(text))
+            self.out_result("URL UTF8:\n"+self.actionURL_decode(text))
             self.out_result("URL GB2312:\n" + self.actionURL_GB2312_decode(text))
             self.out_result("Unicode:\n" + self.actionUnicode_decode(text))
             self.out_result("Escape(%U):\n" + self.actionEscape_U_decode(text))
@@ -471,10 +467,11 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
     # 图片转hex
     def actiontupian_hex_encode(self, text):
         try:
+            encode_type = self.Ui.encode_type.currentText()
             filename = self.file_open(r"Text Files (*.jpg);;All files(*.*)")
             with open(filename, 'rb') as f:
                 hex_data = f.read()
-                hexstr = binascii.hexlify(hex_data).decode("utf-8")
+                hexstr = binascii.hexlify(hex_data).decode(encode_type)
                 hexstr = hexstr.upper()
             self.Ui.Result_text.setPlainText(str('%s' % (hexstr)))
             return 'exit'
@@ -504,24 +501,24 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
             self.Ui.Result_text.setPlainText(str(e))
             pass
 
-    def actionURL_UTF8_encode(self, text):
-        text = text.encode('utf-8')
+    def actionURL_encode(self, text):
+        encode_type = self.Ui.encode_type.currentText()
+        text = text.encode(encode_type)
         result_text = urllib.parse.quote(text)
         return result_text
 
-    def actionURL_GB2312_encode(self, text):
-        text = text.encode('gb2312')
-        result_text = urllib.parse.quote(text)
-        return result_text
+
 
     def actionUnicode_encode(self, text):
+        encode_type = self.Ui.encode_type.currentText()
         text = text.encode('unicode_escape')
-        result_text = str(text, encoding='utf-8')
+        result_text = str(text, encoding=encode_type)
         return result_text
 
     def actionEscape_U_encode(self, text):
+        encode_type = self.Ui.encode_type.currentText()
         text = text.encode('unicode_escape')
-        result_text = str(text, encoding='utf-8').replace('\\u', '%u')
+        result_text = str(text, encoding=encode_type).replace('\\u', '%u')
         return result_text
 
     def actionHtmlEncode_encode(self, text):
@@ -559,14 +556,16 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         return result_text.strip()
 
     def actionBase16_encode(self, text):
+        encode_type = self.Ui.encode_type.currentText()
         text = text.lower()
-        text = base64.b16encode(text.encode("utf-8"))
-        result_text = str(text, encoding='utf-8')
+        text = base64.b16encode(text.encode(encode_type))
+        result_text = str(text, encoding=encode_type)
         return result_text
 
     def actionBase32_encode(self, text):
-        text = base64.b32encode(text.encode("utf-8"))
-        result_text = str(text, encoding='utf-8')
+        encode_type = self.Ui.encode_type.currentText()
+        text = base64.b32encode(text.encode(encode_type))
+        result_text = str(text, encoding=encode_type)
         return result_text
 
     def actionBase36_encode(self, text):
@@ -574,7 +573,8 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         return result_text
 
     def actionBase58_encode(self, text):
-        result_text = base58.b58encode(text.encode('utf-8')).decode()  # 加密
+        encode_type = self.Ui.encode_type.currentText()
+        result_text = base58.b58encode(text.encode(encode_type)).decode()  # 加密
         return result_text
     def actionBase62_encode(self,text):
         try:
@@ -585,8 +585,9 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         # result_text = str(text, encoding='utf-8')
         return text
     def actionBase64_encode(self, text):
-        text = base64.b64encode(text.encode("utf-8"))
-        result_text = str(text, encoding='utf-8')
+        encode_type = self.Ui.encode_type.currentText()
+        text = base64.b64encode(text.encode(encode_type))
+        result_text = str(text, encoding=encode_type)
         return result_text
 
     def actionBase64_2_encode(self, text):
@@ -613,15 +614,18 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
     def actionBase85_ASCII85_encode(self, text):
-        result_text = base64.a85encode(text.encode('utf-8')).decode()#加密
+        encode_type = self.Ui.encode_type.currentText()
+        result_text = base64.a85encode(text.encode(encode_type)).decode()#加密
         return result_text
     def actionBase85_RFC1924_encode(self, text):
-        result_text = base64.b85encode(text.encode('utf-8')).decode()  # 加密
+        encode_type = self.Ui.encode_type.currentText()
+        result_text = base64.b85encode(text.encode(encode_type)).decode()  # 加密
         return result_text
 
 
     def actionBase91_encode(self, text):
-        result_text = base91.encode(text.encode('utf-8'))  #
+        encode_type = self.Ui.encode_type.currentText()
+        result_text = base91.encode(text.encode(encode_type))  #
         return result_text
     def actionBase92_encode(self, text):
         result_text = py3base92.encode(text)
@@ -1152,6 +1156,7 @@ function JSFuck(code){
         result = js_dr.aaencode(text)
         return result
 
+
     # 解码
     def decode(self, decode_type):
         try:
@@ -1173,23 +1178,19 @@ function JSFuck(code){
             # print(e)
             pass
 
-    def actionURL_UTF8_decode(self, text):
-        try:
-            result_text = str(urllib.parse.unquote(text))
-        except Exception as  e:
-            result_text = '解码失败'
-        return result_text
 
-    def actionURL_GB2312_decode(self, text):
+    def actionURL_decode(self, text):
         try:
-            result_text = str(urllib.parse.unquote(text, 'gb2312'))
+            encode_type = self.Ui.encode_type.currentText()
+            result_text = str(urllib.parse.unquote(text, encode_type))
         except Exception as  e:
             result_text = '解码失败'
         return result_text
 
     def actionUnicode_decode(self, text):
         try:
-            result_text = bytes(text, encoding="utf8").decode('unicode_escape')
+            encode_type = self.Ui.encode_type.currentText()
+            result_text = bytes(text, encoding=encode_type).decode('unicode_escape')
         except Exception as  e:
             result_text = '解码失败'
 
@@ -1197,8 +1198,9 @@ function JSFuck(code){
 
     def actionEscape_U_decode(self, text):
         try:
+            encode_type = self.Ui.encode_type.currentText()
             text = text.replace('%u', '\\u').replace('%U', '\\u')
-            result_text = bytes(text, encoding="utf8").decode('unicode_escape')
+            result_text = bytes(text, encoding=encode_type).decode('unicode_escape')
         except Exception as  e:
             result_text = '解码失败'
 
@@ -1837,17 +1839,19 @@ function JSFuck(code){
 
     def actionBase16_decode(self, text):
         try:
+            encode_type = self.Ui.encode_type.currentText()
             text = text.upper()
-            text = base64.b16decode(text.encode("utf-8"))
-            result_text = str(text, encoding='utf-8')
+            text = base64.b16decode(text.encode(encode_type))
+            result_text = str(text, encoding=encode_type)
         except Exception as  e:
             result_text='解码失败'
         return result_text
 
     def actionBase32_decode(self, text):
         try:
-            text = base64.b32decode(text.encode("utf-8"))
-            result_text = str(text, encoding='utf-8')
+            encode_type = self.Ui.encode_type.currentText()
+            text = base64.b32decode(text.encode(encode_type))
+            result_text = str(text, encoding=encode_type)
         except Exception as  e:
             result_text='解码失败'
         return result_text
@@ -1861,7 +1865,8 @@ function JSFuck(code){
         return result_text
     def actionBase58_decode(self, text):
         try:
-            result_text= base58.b58decode(text).decode()  # 解密
+            encode_type = self.Ui.encode_type.currentText()
+            result_text= base58.b58decode(text).decode(encode_type)  # 解密
         except Exception as  e:
             result_text='解码失败'
         return result_text
@@ -1873,8 +1878,9 @@ function JSFuck(code){
         return result_text
     def actionBase64_decode(self, text):
         try:
-            text = base64.b64decode(text.encode("utf-8"))
-            result_text = str(text, encoding='utf-8')
+            encode_type = self.Ui.encode_type.currentText()
+            text = base64.b64decode(text.encode(encode_type))
+            result_text = str(text, encoding=encode_type)
         except Exception as  e:
             result_text='解码失败'
         return result_text
@@ -1905,14 +1911,16 @@ function JSFuck(code){
 
     def actionBase85_ASCII85_decode(self, text):
         try:
-            result_text = base64.a85decode(text).decode()  # 解密
+            encode_type = self.Ui.encode_type.currentText()
+            result_text = base64.a85decode(text).decode(encode_type)  # 解密
         except Exception as  e:
             result_text='解码失败'
         return result_text
 
     def actionBase85_RFC1924_decode(self, text):
         try:
-            result_text= base64.b85decode(text).decode()  # 解密
+            encode_type = self.Ui.encode_type.currentText()
+            result_text= base64.b85decode(text).decode(encode_type)  # 解密
         except Exception as  e:
             result_text='解码失败'
         return result_text
@@ -1920,7 +1928,8 @@ function JSFuck(code){
 
     def actionBase91_decode(self, text):
         try:
-            result_text =  base91.decode(text).decode()
+            encode_type = self.Ui.encode_type.currentText()
+            result_text =  base91.decode(text).decode(encode_type)
         except Exception as  e:
             result_text='解码失败'
         return result_text
@@ -1934,8 +1943,9 @@ function JSFuck(code){
 
     def actionHex_Str_decode(self, text):
         try:
+            encode_type = self.Ui.encode_type.currentText()
             text = text.replace('0x', '').replace('0X', '')
-            result_text = str(bytes.fromhex(text), encoding="utf-8")
+            result_text = str(bytes.fromhex(text), encoding=encode_type)
         except Exception as e:
             result_text='解码失败'
         return result_text
@@ -1943,7 +1953,6 @@ function JSFuck(code){
     def actionShellcode_decode(self, text):
         try:
             text = text.lower()
-            result = ''
             if "0x" in text and "\\x" not in text:
                 text = text.split('0x')
             elif "\\x" in text and "0x" not in text:
@@ -1951,10 +1960,11 @@ function JSFuck(code){
             else:
                 result_text = "请输入正确的格式，如：\n\\x61\\x00\\x62\\x00\\x63\n0x610x000x620x000x63"
                 return result_text
+            result = ''
             for i in text:
-                single = str(bytes.fromhex(i.rjust(2, '0')), encoding="utf-8")
-                result = result + single
-            result_text = str(result)
+                if i != '':
+                    result = result + chr(int(i, 16))
+            result_text = result
         except Exception as e:
             result_text='解码失败'
         return result_text
@@ -2493,7 +2503,7 @@ function JSFuck(code){
                     '...--': '3', '....-': '4', '.....': '5', '-....': '6',
                     '--...': '7', '---..': '8', '----.': '9', '-----': '0',
                     '..--..': '?', '-..-.': '/', '-.--.-': '()', '-....-': '-',
-                    '.-.-.-': '.'
+                    '.-.-.-': '.','..--.-':'_'
                     }
             msg = ''
             if ' ' in text:
@@ -2505,7 +2515,10 @@ function JSFuck(code){
             s = text.split(split_str)
             for item in s:
                 if item != '' and item != ' ':
-                    msg += (dict[item])
+                    if item in dict.keys():
+                        msg += (dict[item])
+                    else:
+                        msg +=("(部分解密失败:"+item+")")
             result_text = msg
         except Exception as  e:
             result_text='解密失败'
