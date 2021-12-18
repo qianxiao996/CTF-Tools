@@ -25,8 +25,8 @@ import frozen_dir
 from Crypto.Cipher import AES
 SETUP_DIR = frozen_dir.app_path()
 sys.path.append(SETUP_DIR)
-version = '1.3.4'
-update_time = '20211208'
+version = '1.3.5'
+update_time = '20211218'
 
 
 class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -243,8 +243,7 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
             return 0
         else:
             self.Ui.Result_text.clear()
-            self.out_result("URL UTF8:\n"+self.actionURL_decode(text))
-            self.out_result("URL GB2312:\n" + self.actionURL_GB2312_decode(text))
+            self.out_result("URL:\n"+self.actionURL_decode(text))
             self.out_result("Unicode:\n" + self.actionUnicode_decode(text))
             self.out_result("Escape(%U):\n" + self.actionEscape_U_decode(text))
             self.out_result("HtmlEncode:\n" + self.actionHtmlEncode_decode(text))
@@ -2616,10 +2615,13 @@ function JSFuck(code){
             str2 = "zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA"
             result_text = ""
             for s in text:
-                if s != ' ':
-                    result_text = result_text + str1[str2.index(s)]
+                if s in str1:
+                    if s != ' ':
+                        result_text = result_text + str1[str2.index(s)]
+                    else:
+                        result_text = result_text + ' '
                 else:
-                    result_text = result_text + ' '
+                    result_text = result_text + s
         except Exception as  e:
             result_text='解密失败'
         return result_text
