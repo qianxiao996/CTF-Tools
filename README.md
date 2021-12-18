@@ -4,22 +4,63 @@
 
 一款CTF编码、解码、加密、解密工具。
 
-##### 支持的编码解码:
+##### 支持的编码解码:            
 
-- [x] URL-UTF-8            
-- [x] URL-GB2312
+- [x] URL
+
 - [x] Unicode
+
 - [x] Escape(%U)
+
 - [x] HtmlEncode
-- [x] ACSII
-- [x] Base16
-- [x] Base32
-- [x] Base64
-- [x] Str->Hex
+
+- [x] ACSII(2进制)
+
+- [x] ACSII(8进制)
+
+- [x] ACSII(10进制)
+
+- [x] ACSII(16进制)
+
 - [x] Shellcode
+
 - [x] qwerty(键盘密码)
+
+- [x] Str->Hex
+
 - [x] 图片转base64
+
 - [x] 图片转hex
+
+- [x] JsFuck
+
+- [x] JJEncode
+
+- [x] AAEncode
+
+##### 支持的base编码
+
+- [x] Base16
+
+- [x] Base32
+
+- [x] Base36
+
+- [x] Base58
+
+- [x] Base64
+
+- [x] Base64(自定义)
+
+- [x] Base85(ASCII85)
+
+- [x] Base85(RFC1924)
+
+- [x] Base91
+
+- [x] Base92
+
+  
 
 ##### 支持的加密解密:
 
@@ -32,9 +73,10 @@
 - [x] 移位密码
 - [x] 云影密码
 - [x] 当铺密码
+- [x] 四方密码
+- [x] 仿射密码
 - [x] 维尼吉亚密码
 - [x] 埃特巴什码
-- [x] base64转图片
 
 ##### 进制转换:
 
