@@ -197,9 +197,9 @@ class MainWindows(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Ui.action_str_tongji.triggered.connect(self.str_tongji)  # 字符串统计
         self.Ui.action_str_re.triggered.connect(self.str_re)  # 字符串拆分
         self.Ui.action_str_xiaoxie.triggered.connect(
-            lambda: self.Ui.Result_text.appendPlainText(self.Ui.Source_text.toPlainText().lower()))  # 字符串全小写
+            lambda: self.Ui.Result_text.setPlainText(self.Ui.Source_text.toPlainText().lower()))  # 字符串全小写
         self.Ui.action_str_daxie.triggered.connect(
-            lambda: self.Ui.Result_text.appendPlainText(self.Ui.Source_text.toPlainText().upper()))  # 字符串全小写
+            lambda: self.Ui.Result_text.setPlainText(self.Ui.Source_text.toPlainText().upper()))  # 字符串全小写
 
         self.Ui.tab_add.clicked.connect(self.add_Tab)  # 添加tab
         self.Ui.tabWidget.tabCloseRequested.connect(self.closeTab)
@@ -3154,7 +3154,7 @@ function JSFuck(code){
             # text = re.findall(r'.{'+str(changdu)+'}', text)
             return_text = ' '.join(text)
             pass
-        self.Ui.Result_text.appendPlainText(str(return_text))
+        self.Ui.Result_text.setPlainText(str(return_text))
         self.dialog.close()
 
     def str_split(self):
@@ -3171,7 +3171,7 @@ function JSFuck(code){
         split_str = self.WChild_split.key.text()
         text = text.split(split_str)
         return_text = ' '.join(text)
-        self.Ui.Result_text.appendPlainText(str(return_text.strip()))
+        self.Ui.Result_text.setPlainText(str(return_text.strip()))
         self.dialog.close()
 
     def str_tongji(self):
@@ -3198,13 +3198,13 @@ function JSFuck(code){
         return_text += '\n\n'
         for x in result1:
             return_text += x[0] + ":" + str(x[1]) + '\n'
-        self.Ui.Result_text.appendPlainText(return_text)
+        self.Ui.Result_text.setPlainText(return_text)
 
         # print(type(result))
 
     def str_re(self):
         text = self.Ui.Source_text.toPlainText().strip()
-        self.Ui.Result_text.appendPlainText(str(text[::-1]))
+        self.Ui.Result_text.setPlainText(str(text[::-1]))
 
     def keyPressEvent(self, event):
         # print("按下：" + str(event.key()))
@@ -3220,11 +3220,11 @@ function JSFuck(code){
         if type == 'Source':
             text = self.Ui.Source_text.toPlainText().strip()
             text = text.replace(source_text, result_text)
-            self.Ui.Source_text.appendPlainText(str(text))
+            self.Ui.Source_text.setPlainText(str(text))
         if type == 'Result':
             text = self.Ui.Result_text.toPlainText()
             text = text.replace(source_text, result_text)
-            self.Ui.Result_text.appendPlainText(str(text))
+            self.Ui.Result_text.setPlainText(str(text))
         self.dialog.close()
 
     def zhuan_yuanwenben(self):
